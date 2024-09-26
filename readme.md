@@ -1,10 +1,13 @@
-******  *    *    ******                           
-*     * *   *     *     * *****   ****   ****      
-*     * *  *      *     * *    * *    * *          
-*     * ***       ******  *    * *    *  ****      
-*     * *  *      *     * *****  *    *      * *** 
-*     * *   *     *     * *   *  *    * *    * *** 
-******  *    *    ******  *    *  ****   ****  ***
+
+
+    oooooo  o    o    oooooo                           
+    o     o o   o     o     o ooooo   oooo   oooo      
+    o     o o  o      o     o o    o o    o o          
+    o     o ooo       oooooo  o    o o    o  oooo      
+    o     o o  o      o     o ooooo  o    o      o ooo 
+    o     o o   o     o     o o   o  o    o o    o ooo 
+    oooooo  o    o    oooooo  o    o  oooo   oooo  ooo
+
 PROTOTYPE by Jon Wilson (10yard)
 
 The arcade version of Donkey Kong is adapted for 2 player co-operative gameplay.
