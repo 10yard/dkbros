@@ -1,10 +1,10 @@
-######  #    #    ######                           
-#     # #   #     #     # #####   ####   ####      
-#     # #  #      #     # #    # #    # #          
-#     # ###       ######  #    # #    #  ####      
-#     # #  #      #     # #####  #    #      # ### 
-#     # #   #     #     # #   #  #    # #    # ### 
-######  #    #    ######  #    #  ####   ####  ###
+******  *    *    ******                           
+*     * *   *     *     * *****   ****   ****      
+*     * *  *      *     * *    * *    * *          
+*     * ***       ******  *    * *    *  ****      
+*     * *  *      *     * *****  *    *      * *** 
+*     * *   *     *     * *   *  *    * *    * *** 
+******  *    *    ******  *    *  ****   ****  ***
 PROTOTYPE by Jon Wilson (10yard)
 
 The arcade version of Donkey Kong is adapted for 2 player co-operative gameplay.
@@ -81,7 +81,12 @@ i.e. dkbros INVINCIBLE
 Thanks to
 ---------
 The Donkey Kong rom hacking resource - https://github.com/furrykef/dkdasm
+
 The MAMEdev team - https://docs.mamedev.org/
+
 WolfMAME by Mahlemiut -https://github.com/mahlemiut/wolfmame
 
+
+Feedback
+--------
 Please send feedback to jon123wilson@hotmail.com
