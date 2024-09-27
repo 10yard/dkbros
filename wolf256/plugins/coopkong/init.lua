@@ -27,33 +27,34 @@ local coopkong = exports
 function coopkong.startplugin()
 	local mac, scr, cpu, mem, snd, prt
 	local parameters, session, invincible, show2
-	local attenuation, frame, hitframe
+	local attenuation, frame, hitframe, cleanup
 	local status, mode, stage, combined
 	local address, offset, size, hx, hy
-	
+
 	local s1, s2, h, olds1, olds2 = {}, {}, {}, {}  -- session data
 	local characters = "0123456789       ABCDEFGHIJKLMNOPQRSTUVWXYZ@-"
 	local graphics = {
-		"                                                                                                            2   ",
-		"                                                                                1      1       1            22  ",
-		"                                     222222                                      2     2      2  22222222222222 ",
-		"                                    23333332                                      3    3     3              22  ",
-		"                                   23      32         2222                         3   3    3               2   ",
-		"                                  23        32       233332            22           3      3                    ",
-		"        3            11111       23          32     23111132          2332                                      ",
-		"     1111111        1211111      23          32    231    132        231132                                     ",
-		"    122222121       1111111      23          32    231    132        231132     1233   1    3321                ",
-		"    111111111      3121111133333 23          32     23111132          2332                                      ",
-		"    111111111       1211111       23        32       233332            22           3      3                    ",
-		"     1111111     2  1211111        23      32         2222                         3   2    3                   ",
-		"        3         2 1211111  2      23333332                                      3    2     3                  ",
-		"        3        2   11111  2        222222                                      2     3      2                 ",
-		"        3       2 222      2  2                                                 1      1       1                ",
-		"        3                                                                                                       "}
+		"                                                                                                            2     22222          ",
+		"                                                                                1      1       1            22   2222222         ",
+		"                                     222222                                      2     2      2  222222222222222 2112112         ",
+		"                                    23333332                                      3    3     3              22   2112112         ",
+		"                                   23      32         2222                         3   3    3               2    2221222         ",
+		"                                  23        32       233332            22           3      3                     1122211         ",
+		"        3            11111       23          32     23111132          2332                                        12121          ",
+		"     1111111        1211111      23          32    231    132        231132                                                      ",
+		"    122222121       1111111      23          32    231    132        231132     1233   1    3321                                 ",
+		"    111111111      3121111133333 23          32     23111132          2332                                                       ",
+		"    111111111       1211111       23        32       233332            22           3      3                                     ",
+		"     1111111     2  1211111        23      32         2222                         3   2    3                                    ",
+		"        3         2 1211111  2      23333332                                      3    2     3                                   ",
+		"        3        2   11111  2        222222                                      2     3      2                                  ",
+		"        3       2 222      2  2                                                 1      1       1                                 ",
+		"        3                                                                                                                        "}
 	local pal_default = {0xff0403ff, 0xfffefcff, 0xffF5bca0}  -- adjusted upright hammer colour for P2
 	local pal_expiring = {0xfff4ba15, 0xfffefcff, 0xffe8070a}
 	local pal_smash = {0xfffefcff, 0xff0403ff, 0xff14f3ff}
-	local pal_arrow = {0xfff4ba15, 0xfffefcff, 0xfff4ba15}
+	local pal_arrow = {0xff000000, 0xfffefcff, 0xfff4ba15}
+	local pal_skull = {0xff000000, 0xffe8070a, 0xfff4ba15}
 	local destroy_seq = {2, 3, 2, 3, 2, 3, 4, 5, 5, 5, 5}
 	local hammer_pos = {{167, 15, 75, 166}, {126, 14, 87, 102}, nil, {127, 6, 167, 103}}
 	local rivet_pos = {0x76cb, 0x752b, 0x76d0, 0x7530, 0x76d5, 0x7535, 0x76da, 0x753a}
@@ -108,7 +109,7 @@ function coopkong.startplugin()
 			end
 			
 			-- open random access session files for data exchange
-			f1, f2 = io.open("session/s1.dat", "r+"),  io.open("session/s2.dat", "r+")			
+			f1, f2 = io.open("session/s1.dat", "r+"),  io.open("session/s2.dat", "r+")
 		end
 	end
 	
@@ -123,17 +124,17 @@ function coopkong.startplugin()
 			 #     #   #   #   ## #    # #    # #   #  #    # #   ## # #    # #    #   #   # #    # #   ## 
 			  #####    #   #    #  ####  #    # #    #  ####  #    # #  ####  #    #   #   #  ####  #    # 
 			]]
-			mem:write_u8(0x600f, 0)      		 -- disable the default turn based 2 player game
-			mem:write_u8(0x622d, 1)      		 -- disable extra life at 7000
+			mem:write_u8(0x600f, 0)				-- disable the default turn based 2 player game
+			mem:write_u8(0x622d, 1)				-- disable extra life at 7000
 			if mem:read_u8(0x6001) < 1 then mem:write_direct_u8(0x6001, 1) end -- Enter 1 coin by default
 			
-			status = mem:read_u8(0x6005) 		 -- game status (1 attract, 2 coins in, 3 playing)
-			mode = mem:read_u8(0x600a)  		 -- mode
-			frame = scr:frame_number()  		 -- frame number (~60 fps)
-			--mem:write_u8(0x6227, 2)   		 -- force a specific stage
-			stage = mem:read_u8(0x6227)  		 -- active stage (1=barrels, 2=pies, 3=springs, 4=rivets)
+			status = mem:read_u8(0x6005)		-- game status (1 attract, 2 coins in, 3 playing)
+			mode = mem:read_u8(0x600a)			-- mode
+			frame = scr:frame_number()			-- frame number (~60 fps)
+			--mem:write_u8(0x6227, 2)			-- force a specific stage
+			stage = mem:read_u8(0x6227)			-- active stage (1=barrels, 2=pies, 3=springs, 4=rivets)
 					
-			if session == 2 then			
+			if session == 2 then
 				--[[
 				  #####                                           #####  
 				 #     # ######  ####   ####  #  ####  #    #    #     # 
@@ -171,7 +172,6 @@ function coopkong.startplugin()
 				else 
 					emu.unpause() 
 				end
-				--print(s1["mode"], s2["mode"])
 
 				-- mute music and non-gameplay sounds from session 2
 				if s2["mode"] ~= 12 then snd.attenuation = -32 else snd.attenuation = attenuation end
@@ -188,7 +188,7 @@ function coopkong.startplugin()
 
 				-- Sync P1 dead with P2
 				if s1["alive"] == 0 and olds1 and olds1["alive"] == 1 then mem:write_u8(0x6200, 0) end
-				
+
 				-- Sync P1 finish with P2
 				if s2["mode"] == 12 and s1["mode"] == 0x16 then
 					mem:write_u8(0x638c, 0)  -- don't award bonus points,  P1 gets the bonus
@@ -230,12 +230,14 @@ function coopkong.startplugin()
 				  #####  ######  ####   ####  #  ####  #    #    ##### 
 				]]
 				if mac.paused then emu.unpause() end -- disable session 1 pausing
-				if status < 3 then display_title() end  -- display titles
-				
+				if status < 3 then
+					display_title()
+				end
+
 				-- display arrows indicating that scores are combined
 				draw_sprite(6, pal_arrow, 248, 60)
 				draw_sprite(6, pal_arrow, 248, 136, 4)
-				
+
 				s1["frame"] = frame
 				s1["mode"] = mode
 
@@ -314,7 +316,7 @@ function coopkong.startplugin()
 				end
 				
 				-- Draw hammer when smashing
-				if s1["mode"] == 12 and (s2["hammer_active"] == 1 or s2["hammer_grab"] == 1) then
+				if s1["mode"] == 12 and s2["mode"] == 12 and (s2["hammer_active"] == 1 or s2["hammer_grab"] == 1) then
 					mem:write_u8(0x6350, 0x00)  -- Clear hammer hit indicator for P1 
 					local _pal = pal_default
 					local hx, hy = s2["x"] - 23, 269 - s2["y"]
@@ -335,7 +337,14 @@ function coopkong.startplugin()
 						end
 					end
 				end
-				
+
+				-- Cleanup previously removed fires and pies
+				if cleanup and s2["enemy_hit"] ~= 1 then
+					mem:write_u8(cleanup + 3, 250)
+					mem:write_u8(cleanup + 5, 8)
+					cleanup = nil
+				end
+
 				-- Remove enemies hit by P2 hammer
 				if s2["enemy_hit"] == 1 then
 					address, size = s2["enemy_type"] * 0x100, 0x20
@@ -346,22 +355,22 @@ function coopkong.startplugin()
 						s2["enemy_x"] = mem:read_u8(offset + 0x03) - 16
 						s2["enemy_y"] = mem:read_u8(offset + 0x05)
 					end
+
 					mem:write_u8(offset + 0x03, 0)
 					mem:write_u8(offset + 0x05, 0)
-					if s2["enemy_type"] == 0x64 then  -- fireballs only
+					if s2["enemy_type"] == 0x64 or s2["enemy_type"] == 0x65 then  -- fires and pies
 						mem:write_u8(offset + 0x0e, 0)
 						mem:write_u8(offset + 0x0f, 0)
-					elseif s2["enemy_type"] == 0x65 then  -- pies only
-						mem:write_u8(offset + 0x0e, 0)
-						mem:write_u8(offset + 0x0f, 0)
+						cleanup = offset
 					end
+
 					-- Destruction animation
 					draw_sprite(destroy_seq[math.floor((frame - hitframe) / 8) % #destroy_seq + 1], pal_smash, 264 - s2["enemy_y"], s2["enemy_x"] - 8)
 				end
-								
+
 				-- Sync P2 dead with P1
 				if s2["alive"] == 0 and olds2 and olds2["alive"] == 1 then mem:write_u8(0x6200, 0) end
-				
+
 				-- Sync P2 finish with P1
 				if s1["mode"] == 12 and s2["mode"] == 0x16 then
 					mem:write_u8(0x638c, 0)  -- don't award bonus points,  P2 gets the bonus

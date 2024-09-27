@@ -13,7 +13,6 @@ import os
 import sys
 import threading
 import subprocess
-import time
 import shutil
 
 # Are there optional parameters i.e. "WINDOW", "INVINCIBLE", "SHOW2" or "INVINCIBLE SHOW2"
@@ -26,7 +25,7 @@ window = ""
 if "WINDOW" in optional_parameters or os.path.exists("WINDOW.txt") or os.path.exists("WINDOW"):
     window = " -window"
 
-MAME_COMMAND = 'mame dkong -plugin coopkong -background_input -volume 0 -skip_gameinfo -prescale 8'
+MAME_COMMAND = 'mame dkong -plugin coopkong -background_input -volume 0 -skip_gameinfo -prescale 20'
 session1_args = f'-autoboot_command "--S1 {optional_parameters}" -cfg_directory config\dkong_p1 -video bgfx {window}'
 session2_args = f'-autoboot_command "--S2 {optional_parameters}" -cfg_directory config\dkong_p2 -video none -window -seconds_to_run -1'
 
@@ -39,6 +38,9 @@ if __name__ == "__main__":
     # Create empty files for data exchange between sessions
     open("session/s1.dat", mode='a').close()
     open("session/s2.dat", mode='a').close()
+
+    if "SYNCINPUT" in optional_parameters:
+        session2_args = session2_args.replace("-cfg_directory config\dkong_p2", f"-cfg_directory config\dkong_p1")
 
     # creating thread for MAME session 2.  This ends when the main process ends (with session 2).
     if "SHOW2" in optional_parameters:
