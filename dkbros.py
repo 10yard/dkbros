@@ -6,8 +6,12 @@
 *     * *  *      *     * *****  *    *      * ***
 *     * *   *     *     * *   *  *    * *    * ***
 ******  *    *    ******  *    *  ****   ****  ***
-2 Player co-op Donkey Kong
+2 Player co-op Donkey Kong.
 Prototype by 10yard
+
+A wrapper for MAME to simplify launch of the DKBros. plugin and
+to synchronise realtime data across 2 sessions. Session 2 is
+hidden from view.
 """
 import os
 import sys
@@ -25,6 +29,7 @@ window = ""
 if "WINDOW" in optional_parameters or os.path.exists("WINDOW.txt") or os.path.exists("WINDOW"):
     window = " -window"
 
+# autoboot command is craftily used to pass optional parameters to the plugin
 MAME_COMMAND = 'mame dkong -plugin coopkong -background_input -volume 0 -skip_gameinfo -prescale 20'
 session1_args = f'-autoboot_command "--S1 {optional_parameters}" -cfg_directory config\dkong_p1 -video bgfx {window}'
 session2_args = f'-autoboot_command "--S2 {optional_parameters}" -cfg_directory config\dkong_p2 -video none -window -seconds_to_run -1'

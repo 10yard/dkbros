@@ -49,18 +49,18 @@ Default Controls
 The default player controls are mapped to one keyboard as follows.
 
 ### Player 1
-- P1 Up    = Up Arrow
-- P1 Down  = Down Arrow
-- P1 Left  = Left Arrow
-- P1 Right = Right Arrow
+- P1 Up    = W
+- P1 Down  = S
+- P1 Left  = A
+- P1 Right = D
 - P1 Jump  = Left Ctrl
 
 ### Player 2
-- P2 Up    = NumPad-7
-- P2 Down  = NumPad-4
-- P2 Left  = NumPad-5
-- P2 Right = NumPad-6
-- P2 Jump  = NumPad-0
+- P2 Up    = Up Arrow
+- P2 Down  = Down Arrow
+- P2 Left  = Left Arrow
+- P2 Right = Right Arrow
+- P2 Jump  = Space
 
 Controls can be customised as per regular MAME including using joysticks.
 
