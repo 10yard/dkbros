@@ -18,7 +18,8 @@ import sys
 import threading
 import subprocess
 import ctypes
-import shutil
+
+UPDATE_LIST = [(":IN0", ":INX"), ("P1_", "PX_"), (":IN1", ":IN0"), ("P2_", "P1_"), (":INX", ":IN1"), ("PX_", "P2_")]
 
 # Are there optional parameters i.e. "WINDOW", "INVINCIBLE", "SHOW2" or "INVINCIBLE SHOW2"
 optional_parameters = ""
@@ -75,12 +76,8 @@ if __name__ == "__main__":
                     valid = False
                     break
             if valid:
-                text = text.replace(":IN0", ":INX")
-                text = text.replace("P1_", "PX_")
-                text = text.replace(":IN1", ":IN0")
-                text = text.replace("P2_", "P1_")
-                text = text.replace(":INX", ":IN1")
-                text = text.replace("PX_", "P2_")
+                for u in UPDATE_LIST:
+                    text = text.replace(u[0], u[1])
                 with open("config\dkong_p2\dkong.cfg", "w") as w:
                     w.write(text)
     else:
