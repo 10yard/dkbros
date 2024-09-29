@@ -12,7 +12,7 @@ PROTOTYPE by Jon Wilson (10yard)
 
 The arcade version of Donkey Kong is adapted for 2 player co-operative gameplay.
 
-DKBros. includes a program wrapper and LUA plugin for MAME.    
+DKBros. includes a program wrapper and a LUA plugin for MAME.    
 
 How to Play
 -----------
@@ -67,12 +67,12 @@ Controls can be customised as per regular MAME including using joysticks.
 
 Steps to Configure Controls
 ---------------------------
-1. Run dkbros.exe and press the <TAB> key to access settings menu
+1. Run dkbros.exe and press the TAB key to open the settings menu
 2. Select "Input Settings"
 3. Select "Input Assignments (this system)"
 4. Change 1P and 2P input controls as required
-5. Close settings menu
-6. Exit and restart dkbros game to apply your changes for both players
+5. Close the settings menu
+6. Exit and restart dkbros game to apply changes for both players
 
 **IMPORTANT:**  Please be sure to map every input for P1 and P2.
 

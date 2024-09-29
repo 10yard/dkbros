@@ -29,9 +29,9 @@ function coopkong.startplugin()
 	local parameters, session, invincible, show2
 	local attenuation, frame, hitframe, cleanup
 	local status, mode, stage, combined
-	local address, offset, size, hx, hy
+	local address, offset, size
 
-	local s1, s2, h, olds1, olds2 = {}, {}, {}, {}  -- session data
+	local s1, s2, olds1, olds2 = {}, {}, {}, {}  -- session data
 	local characters = "0123456789       ABCDEFGHIJKLMNOPQRSTUVWXYZ@-"
 	local graphics = {
 		"                                                                                                            2     22222          ",
@@ -54,7 +54,6 @@ function coopkong.startplugin()
 	local pal_expiring = {0xfff4ba15, 0xfffefcff, 0xffe8070a}
 	local pal_smash = {0xfffefcff, 0xff0403ff, 0xff14f3ff}
 	local pal_arrow = {0xff000000, 0xfffefcff, 0xfff4ba15}
-	local pal_skull = {0xff000000, 0xffe8070a, 0xfff4ba15}
 	local destroy_seq = {2, 3, 2, 3, 2, 3, 4, 5, 5, 5, 5}
 	local hammer_pos = {{167, 15, 75, 166}, {126, 14, 87, 102}, nil, {127, 6, 167, 103}}
 	local rivet_pos = {0x76cb, 0x752b, 0x76d0, 0x7530, 0x76d5, 0x7535, 0x76da, 0x753a}
@@ -100,6 +99,7 @@ function coopkong.startplugin()
 			write_rom_message(0x36ff, "  ANY START BUTTON   ")					-- Mod: Start text 2P
 			write_data(0x0210, {0x3e, 0x07}) 									-- Mod: Starting lives to 7
 			write_data(0x130d, {0x00, 0x90}) 									-- Mod: Disable high score entry
+			write_data(0x20b2, {0, 0, 0})										-- Mod: Barrels keep rolling under P1
 			for i=0x096b, 0x0975 do mem:write_direct_u8(i, 0x00) end			-- Mod: Remove high score table
 			if invincible == 1 then write_data(0x2813, {0x3e, 0x00, 0x00}) end	-- Mod: Invincible to enemies
 				
@@ -131,7 +131,7 @@ function coopkong.startplugin()
 			status = mem:read_u8(0x6005)		-- game status (1 attract, 2 coins in, 3 playing)
 			mode = mem:read_u8(0x600a)			-- mode
 			frame = scr:frame_number()			-- frame number (~60 fps)
-			--mem:write_u8(0x6227, 2)			-- force a specific stage
+			mem:write_u8(0x6227, 2)			-- force a specific stage
 			stage = mem:read_u8(0x6227)			-- active stage (1=barrels, 2=pies, 3=springs, 4=rivets)
 					
 			if session == 2 then
@@ -156,11 +156,12 @@ function coopkong.startplugin()
 				s1["x"] = tonumber(f1:read("*line"))     -- x position
 				s1["y"] = tonumber(f1:read("*line"))     -- y position
 				for i=0x6a0c, 0x6a14, 4 do s1["item-"..tostring(i)] = tonumber(f1:read("*line")) end  -- bonus items
-				for i=0x6400, 0x649f do mem:write_u8(i, f1:read("*line")) end  -- fires
-				for i=0x6500, 0x65ff do mem:write_u8(i, f1:read("*line")) end  -- bouncers and pies
-				for i=0x6700, 0x683f do mem:write_u8(i, f1:read("*line")) end  -- barrels (x10)
+				for i=0x6400, 0x649f do mem:write_u8(i, f1:read("*line")) end	-- fires
+				for i=0x6500, 0x65ff do mem:write_u8(i, f1:read("*line")) end	-- bouncers and pies
+				for i=0x6700, 0x683f do mem:write_u8(i, f1:read("*line")) end	-- barrels (x10)
+				for i=0x6280, 0x628f do mem:write_u8(i, f1:read("*line")) end	-- retractable ladders
 				if stage == 3 then
-					for i=0x6600, 0x665f do mem:write_u8(i, f1:read("*line")) end  -- elevators (x6)
+					for i=0x6600, 0x665f do mem:write_u8(i, f1:read("*line")) end	-- elevators (x6)
 				end
 				f1:flush()
 				--------------------------------------------------------------------------------------------------------
@@ -319,21 +320,21 @@ function coopkong.startplugin()
 				if s1["mode"] == 12 and s2["mode"] == 12 and (s2["hammer_active"] == 1 or s2["hammer_grab"] == 1) then
 					mem:write_u8(0x6350, 0x00)  -- Clear hammer hit indicator for P1 
 					local _pal = pal_default
-					local hx, hy = s2["x"] - 23, 269 - s2["y"]
+					local _hx, _hy = s2["x"] - 23, 269 - s2["y"]
 					if s2["hammer_ending"] == 1 then _pal = pal_expiring end
 					if s2["hammer_grab"] == 1 then
-						draw_sprite(0, _pal, hy+12, hx-3)
+						draw_sprite(0, _pal, _hy+12, _hx-3)
 					elseif s2["sprite"] % 128 >= 8 and s2["sprite"] % 128 <= 13 then
 						if s2["sprite"] == 8 or s2["sprite"] == 10 then
-							draw_sprite(0, _pal, hy+12, hx)
+							draw_sprite(0, _pal, _hy+12, _hx)
 						elseif s2["sprite"] == 12 or s2["sprite"] == 140 then
-							draw_sprite(0, _pal, hy+12, hx-1)
+							draw_sprite(0, _pal, _hy+12, _hx-1)
 						elseif s2["sprite"] == 136 or s2["sprite"] == 138 then
-							draw_sprite(0, _pal, hy+12, hx-2)
+							draw_sprite(0, _pal, _hy+12, _hx-2)
 						elseif s2["sprite"] == 9 or s2["sprite"] == 11 or s2["sprite"] == 13 then
-							draw_sprite(1, _pal, hy-4, hx-16)
+							draw_sprite(1, _pal, _hy-4, _hx-16)
 						elseif s2["sprite"] == 137 or s2["sprite"] == 139 or s2["sprite"] == 141 then
-							draw_sprite(1, _pal, hy-4, hx+13, 2)
+							draw_sprite(1, _pal, _hy-4, _hx+13, 2)
 						end
 					end
 				end
@@ -404,11 +405,12 @@ function coopkong.startplugin()
 				f1:write(mem:read_u8(0x6200).."\n")  -- alive status
 				f1:write(mem:read_u8(0x6203).."\n")  -- x position
 				f1:write(mem:read_u8(0x6205).."\n")  -- y position
-				for i=0x6a0c, 0x6a14, 4 do f1:write(mem:read_u8(i).."\n") end  -- bonus items
-				for i=0x6400, 0x649f do f1:write(mem:read_u8(i).."\n") end     -- fires
-				for i=0x6500, 0x65ff do f1:write(mem:read_u8(i).."\n") end     -- bouncers and pies
-				for i=0x6700, 0x683f do f1:write(mem:read_u8(i).."\n") end     -- barrels (x10)
-				for i=0x6600, 0x665f do f1:write(mem:read_u8(i).."\n") end     -- elevators (x6)
+				for i=0x6a0c, 0x6a14, 4 do f1:write(mem:read_u8(i).."\n") end	-- bonus items
+				for i=0x6400, 0x649f do f1:write(mem:read_u8(i).."\n") end		-- fires
+				for i=0x6500, 0x65ff do f1:write(mem:read_u8(i).."\n") end		-- bouncers and pies
+				for i=0x6700, 0x683f do f1:write(mem:read_u8(i).."\n") end		-- barrels (x10)
+				for i=0x6280, 0x628f do f1:write(mem:read_u8(i).."\n") end		-- retractable ladders
+				for i=0x6600, 0x665f do f1:write(mem:read_u8(i).."\n") end		-- elevators (x6)
 				f1:flush()
 				--------------------------------------------------------------------------------------------------------
 			end
@@ -436,7 +438,7 @@ function coopkong.startplugin()
 		write_message(0x77b2 + i, "++  +  +  +++ + + +++ +++ ++")
 		write_message(0x77b3 + i, "                            ")
 		if frame % 160 < 80 then write_message(0x77bf, "PROTOTYPE") else write_message(0x77bf, "BY 10YARD") end
-		if frame % 80 < 40 then mem:write_u8(0x6082, 0x01) end  -- Play DK Roar Sound
+		-- if frame % 80 < 40 then mem:write_u8(0x6082, 0x01) end  -- Play DK Roar Sound
 	end
 	
 	function blank_screen()
