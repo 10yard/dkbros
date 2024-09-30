@@ -18,14 +18,14 @@ Session 1 (foreground) and session 2 (background) are synchronised with data mer
 ]]
 local exports = {}
 exports.name = "coopkong"
-exports.version = "0.1"
+exports.version = "0.2"
 exports.description = "DK Bros: Multiplayer Co-Op Donkey Kong"
 exports.license = "GNU GPLv3"
 exports.author = { name = "Jon Wilson (10yard)" }
 local coopkong = exports
 
 function coopkong.startplugin()
-	local mac, scr, cpu, mem, snd, prt
+	local mac, scr, cpu, mem, snd, prt, vid
 	local parameters, session, invincible, show2
 	local attenuation, frame, hitframe, cleanup
 	local status, mode, stage, combined
@@ -85,6 +85,7 @@ function coopkong.startplugin()
 			cpu = mac.devices[":maincpu"]
 			mem = cpu.spaces["program"]
 			snd = mac.sound
+			vid = mac.video
 			prt = mac.ioport.ports
 			attenuation = snd.attenuation			
 						
@@ -131,9 +132,9 @@ function coopkong.startplugin()
 			status = mem:read_u8(0x6005)		-- game status (1 attract, 2 coins in, 3 playing)
 			mode = mem:read_u8(0x600a)			-- mode
 			frame = scr:frame_number()			-- frame number (~60 fps)
-			mem:write_u8(0x6227, 2)			-- force a specific stage
+			--mem:write_u8(0x6227, 2)			-- force a specific stage
 			stage = mem:read_u8(0x6227)			-- active stage (1=barrels, 2=pies, 3=springs, 4=rivets)
-					
+
 			if session == 2 then
 				--[[
 				  #####                                           #####  
@@ -143,18 +144,20 @@ function coopkong.startplugin()
 					   # #           #      # # #    # #  # #    #       
 				 #     # #      #    # #    # # #    # #   ##    #       
 				  #####  ######  ####   ####  #  ####  #    #    #######
-				]]			
+				]]
 				if not show2 then blank_screen() end
 				s2["frame"] = frame
 				s2["mode"] = mode
-								
+
 				-- Retrieve session 1 info -----------------------------------------------------------------------------
 				f1:seek("set")  -- set cursor to start of file
-				s1["mode"] = tonumber(f1:read("*line"))  -- mode
-				mem:write_u8(0x62b1, f1:read("*line"))   -- bonus timer
-				s1["alive"] = tonumber(f1:read("*line")) -- alive status
-				s1["x"] = tonumber(f1:read("*line"))     -- x position
-				s1["y"] = tonumber(f1:read("*line"))     -- y position
+				s1["mode"] = tonumber(f1:read("*line"))			-- mode
+				mem:write_u8(0x62b1, f1:read("*line"))			-- bonus timer
+				s1["alive"] = tonumber(f1:read("*line"))		-- alive status
+				s1["x"] = tonumber(f1:read("*line"))     		-- x position
+				s1["y"] = tonumber(f1:read("*line"))     		-- y position
+				s1["enemy_hit"] = tonumber(f1:read("*line"))	-- enemy hit
+				s1["enemy_hit_b"] = tonumber(f1:read("*line"))	-- enemy hit
 				for i=0x6a0c, 0x6a14, 4 do s1["item-"..tostring(i)] = tonumber(f1:read("*line")) end  -- bonus items
 				for i=0x6400, 0x649f do mem:write_u8(i, f1:read("*line")) end	-- fires
 				for i=0x6500, 0x65ff do mem:write_u8(i, f1:read("*line")) end	-- bouncers and pies
@@ -165,13 +168,13 @@ function coopkong.startplugin()
 				end
 				f1:flush()
 				--------------------------------------------------------------------------------------------------------
-							
+
 				-- Wait for sync with P1 session
-				if s2["mode"] == 12 and s1["mode"] < 12 then 
+				if s2["mode"] == 12 and s1["mode"] < 12 then
 					scr:draw_text(0, 0, "Waiting for sync...", 0xffffffff)
-					emu.pause() 
-				else 
-					emu.unpause() 
+					emu.pause()
+				else
+					emu.unpause()
 				end
 
 				-- mute music and non-gameplay sounds from session 2
@@ -179,7 +182,7 @@ function coopkong.startplugin()
 
 				-- Adjust P2 start position
 				if s2["mode"] == 12 and olds2 and olds2["mode"] < 12 then mem:write_u8(0x6203, mem:read_u8(0x6203) + 4) end
-	
+
 				-- Remove bonus items collected by P1
 				if s1["mode"] == 12 and stage > 1 then
 					for i=0x6a0c, 0x6a14, 4 do
@@ -194,9 +197,21 @@ function coopkong.startplugin()
 				if s2["mode"] == 12 and s1["mode"] == 0x16 then
 					mem:write_u8(0x638c, 0)  -- don't award bonus points,  P1 gets the bonus
 					mem:write_u8(0x62b1, 0)  -- don't award bonus points,  P1 gets the bonus
-					if stage < 4 then mem:write_u8(0x6205, 0x30) else mem:write_u8(0x6290, 0) end	
+					if stage < 4 then
+						mem:write_u8(0x6203, s1["x"] + 2)
+						mem:write_u8(0x6205, 0x30)
+					else
+						mem:write_u8(0x6290, 0)
+					end
 				end
-				
+
+				-- Freeze P2 while P1 is smashing
+				if s1["mode"] == 12 and s2["mode"] == 12 and mem:read_u8(0x6350) == 0 and s1["enemy_hit"] == 1 then
+					emu.pause()
+				else
+					emu.unpause()
+				end
+
 				-- Store session 2 info --------------------------------------------------------------------------------
 				f2:seek("set")  -- set cursor to start of file
 				f2:write(s2["mode"].."\n")  -- mode
@@ -231,6 +246,16 @@ function coopkong.startplugin()
 				  #####  ######  ####   ####  #  ####  #    #    ##### 
 				]]
 				if mac.paused then emu.unpause() end -- disable session 1 pausing
+				-- Wait for sync with P2 session
+				if s1["mode"] == 12 and s2["mode"] < 12 then
+					scr:draw_text(0, 0, "Waiting for sync...", 0xffffffff)
+					snd.attenuation = -32
+					vid.throttle_rate = 0.05
+				else
+					snd.attenuation = attenuation
+					vid.throttle_rate = 1
+				end
+
 				if status < 3 then
 					display_title()
 				end
@@ -318,7 +343,7 @@ function coopkong.startplugin()
 				
 				-- Draw hammer when smashing
 				if s1["mode"] == 12 and s2["mode"] == 12 and (s2["hammer_active"] == 1 or s2["hammer_grab"] == 1) then
-					mem:write_u8(0x6350, 0x00)  -- Clear hammer hit indicator for P1 
+					----mem:write_u8(0x6350, 0x00)  -- Clear hammer hit indicator for P1
 					local _pal = pal_default
 					local _hx, _hy = s2["x"] - 23, 269 - s2["y"]
 					if s2["hammer_ending"] == 1 then _pal = pal_expiring end
@@ -405,6 +430,8 @@ function coopkong.startplugin()
 				f1:write(mem:read_u8(0x6200).."\n")  -- alive status
 				f1:write(mem:read_u8(0x6203).."\n")  -- x position
 				f1:write(mem:read_u8(0x6205).."\n")  -- y position
+				f1:write(mem:read_u8(0x6350).."\n")  -- enemy hit a
+				f1:write(mem:read_u8(0x6345).."\n")  -- enemy hit b
 				for i=0x6a0c, 0x6a14, 4 do f1:write(mem:read_u8(i).."\n") end	-- bonus items
 				for i=0x6400, 0x649f do f1:write(mem:read_u8(i).."\n") end		-- fires
 				for i=0x6500, 0x65ff do f1:write(mem:read_u8(i).."\n") end		-- bouncers and pies
@@ -437,7 +464,7 @@ function coopkong.startplugin()
 		write_message(0x77b1 + i, "+ + + +   + + + + + +   + ++")
 		write_message(0x77b2 + i, "++  +  +  +++ + + +++ +++ ++")
 		write_message(0x77b3 + i, "                            ")
-		if frame % 160 < 80 then write_message(0x77bf, "PROTOTYPE") else write_message(0x77bf, "BY 10YARD") end
+		if frame % 160 < 80 then write_message(0x77bf, "PROTOTYPE B") else write_message(0x77bf, "BY 10YARD  ") end
 		-- if frame % 80 < 40 then mem:write_u8(0x6082, 0x01) end  -- Play DK Roar Sound
 	end
 	
