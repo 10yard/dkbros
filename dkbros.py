@@ -47,6 +47,9 @@ if __name__ == "__main__":
         open("session/s1.dat", mode='a').close()
         open("session/s2.dat", mode='a').close()
 
+        if "DEBUG" in optional_parameters:
+            session1_args += " -debug -window"
+
         if "SYNCINPUT" in optional_parameters:
             session2_args = session2_args.replace("-cfg_directory config\dkong_p2", f"-cfg_directory config\dkong_p1")
 
@@ -54,6 +57,7 @@ if __name__ == "__main__":
         if "SHOW2" in optional_parameters:
             session1_args += " -window"
             session2_args = session2_args.replace("-video none", f"-video bgfx")
+            # subprocess.run(f"{MAME_COMMAND} {session2_args}")
             background_mame(session2_args)
         else:
             t1 = threading.Thread(target=background_mame, args=(session2_args,) )

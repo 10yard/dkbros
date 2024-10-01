@@ -27,7 +27,7 @@ Features
 
 - 2 players are controlled independently in the same game.
 
-- Each player gets their own hammers
+- Each player gets their own hammers, and they can be smashed together
 
 - Player 1 gets the barrel control.  Player 2 doesn't control barrels but gets the advantage of 
     not being targeted by barrels or fires.
