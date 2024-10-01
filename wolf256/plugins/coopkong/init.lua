@@ -34,26 +34,27 @@ function coopkong.startplugin()
 	local s1, s2, olds1, olds2 = {}, {}, {}, {}  -- session data
 	local characters = "0123456789       ABCDEFGHIJKLMNOPQRSTUVWXYZ@-"
 	local graphics = {
-		"                                                                                                            2     22222          ",
-		"                                                                                1      1       1            22   2222222         ",
-		"                                     222222                                      2     2      2  222222222222222 2112112         ",
-		"                                    23333332                                      3    3     3              22   2112112         ",
-		"                                   23      32         2222                         3   3    3               2    2221222         ",
-		"                                  23        32       233332            22           3      3                     1122211         ",
-		"        3            11111       23          32     23111132          2332                                        12121          ",
-		"     1111111        1211111      23          32    231    132        231132                                                      ",
-		"    122222121       1111111      23          32    231    132        231132     1233   1    3321                                 ",
-		"    111111111      3121111133333 23          32     23111132          2332                                                       ",
-		"    111111111       1211111       23        32       233332            22           3      3                                     ",
-		"     1111111     2  1211111        23      32         2222                         3   2    3                                    ",
-		"        3         2 1211111  2      23333332                                      3    2     3                                   ",
-		"        3        2   11111  2        222222                                      2     3      2                                  ",
-		"        3       2 222      2  2                                                 1      1       1                                 ",
-		"        3                                                                                                                        "}
+		"                                                                                                            2    12222222222222211               ",
+		"                                                                                1      1       1            22   22222222222222221               ",
+		"                                     222222                                      2     2      2  222222222222222 21233333333332121               ",
+		"                                    23333332                                      3    3     3              22   22231212211132221               ",
+		"                                   23      32         2222                         3   3    3               2    21231121221132121               ",
+		"                                  23        32       233332            22           3      3                     22231112122132221               ",
+		"        3            11111       23          32     23111132          2332                                       21233333333332121               ",
+		"     1111111        1211111      23          32    231    132        231132                                      22222222222222221               ",
+		"    122222121       1111111      23          32    231    132        231132     1233   1    3321                 1111113333111111                ",
+		"    111111111      3121111133333 23          32     23111132          2332                                       2221132222311222                ",
+		"    111111111       1211111       23        32       233332            22           3      3                     1111322222231111                ",
+		"     1111111     2  1211111        23      32         2222                         3   2    3                    3333222332223333                ",
+		"        3         2 1211111  2      23333332                                      3    2     3                   2222223113222222                ",
+		"        3        2   11111  2        222222                                      2     3      2                  2121223113221212                ",
+		"        3       2 222      2  2                                                 1      1       1                 2222222332222222                ",
+		"        3                                                                                                        2222222222222222                "}
 	local pal_default = {0xff0403ff, 0xfffefcff, 0xffF5bca0}  -- adjusted upright hammer colour for P2
 	local pal_expiring = {0xfff4ba15, 0xfffefcff, 0xffe8070a}
 	local pal_smash = {0xfffefcff, 0xff0403ff, 0xff14f3ff}
 	local pal_arrow = {0xff000000, 0xfffefcff, 0xfff4ba15}
+	local pal_mount = {0xff000000, 0xfff4ba15, 0xffe8070a}  -- elevator mount point (this sprite was hijacked for P2 Jumpman)
 	local destroy_seq = {2, 3, 2, 3, 2, 3, 4, 5, 5, 5, 5}
 	local hammer_pos = {{167, 15, 75, 166}, {126, 14, 87, 102}, nil, {127, 6, 167, 103}}
 	local rivet_pos = {0x76cb, 0x752b, 0x76d0, 0x7530, 0x76d5, 0x7535, 0x76da, 0x753a}
@@ -135,6 +136,7 @@ function coopkong.startplugin()
 			mode = mem:read_u8(0x600a)			-- mode
 			frame = scr:frame_number()			-- frame number (~60 fps)
 			--mem:write_u8(0x6227, 3)			-- force a specific stage
+			--mem:write_u8(0x6229, 5)           -- force a specific level
 			stage = mem:read_u8(0x6227)			-- active stage (1=barrels, 2=pies, 3=springs, 4=rivets)
 
 			if session == 2 then
@@ -181,6 +183,7 @@ function coopkong.startplugin()
 				else
 					vid.throttle_rate = 1
 				end
+
 				-- Wait for sync with P1 session
 				if s2["mode"] == 12 and s1["mode"] < 12 then
 					scr:draw_text(0, 0, "Waiting for sync...", 0xffffffff)
@@ -188,6 +191,7 @@ function coopkong.startplugin()
 				else
 					emu.unpause()
 				end
+
 
 				-- mute music and non-gameplay sounds from session 2
 				if s2["mode"] ~= 12 then snd.attenuation = -32 else snd.attenuation = attenuation end
@@ -216,9 +220,7 @@ function coopkong.startplugin()
 
 				-- Freeze P2 while P1 is smashing
 				if s1["mode"] == 12 and s2["mode"] == 12 and mem:read_u8(0x6350) == 0 and s1["enemy_hit"] == 1 then
-					emu.pause()
-				else
-					emu.unpause()
+					emu.pause()  -- unpaused during sync at top
 				end
 
 				-- Store session 2 info --------------------------------------------------------------------------------
@@ -337,15 +339,19 @@ function coopkong.startplugin()
 					end
 				end
 
-				-- Hijack unused sprite from session 1 for player 2 jumpman
+				---- Hijack elevator mount sprite from session 1 for player 2 jumpman
 				if s1["mode"] > 11 and s1["mode"] < 16 then
 					mem:write_u8(0x697c, s2["x"])
 					mem:write_u8(0x697f, s2["y"])
-					--scr:draw_text(256 - s2["y"], s2["x"] -16, "O", 0xffffffff)  -- Place holder for P2 Jumpman
-					mem:write_u8(0x697d, s2["sprite"])				
+					mem:write_u8(0x697d, s2["sprite"])
 					mem:write_u8(0x697e, 0x0c)  -- Set Jumpman color to blue
+					if stage == 3 then
+						-- redraw hijacked sprite on springs stage
+						draw_sprite(7, pal_mount, 18, 95)
+						draw_sprite(8, pal_mount, 18, 111)
+					end
 				end
-				
+
 				-- Draw available hammers
 				if hammer_pos[stage] then
 					if s1["mode"] >= 11 and s1["mode"] <= 13 then
@@ -485,6 +491,7 @@ function coopkong.startplugin()
 		write_message(0x77b3 + i, "                            ")
 		if frame % 160 < 80 then write_message(0x77bf, "PROTOTYPE B") else write_message(0x77bf, "BY 10YARD  ") end
 		-- if frame % 80 < 40 then mem:write_u8(0x6082, 0x01) end  -- Play DK Roar Sound
+		if invincible == 1 then write_message(0x7683, "INVINCIBLE") end  -- Invincible mode
 	end
 	
 	function blank_screen()
