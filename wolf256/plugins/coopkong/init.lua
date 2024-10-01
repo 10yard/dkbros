@@ -175,15 +175,11 @@ function coopkong.startplugin()
 				-- Sync P1 dead with P2
 				if s1["alive"] == 0 and olds1 and olds1["alive"] == 1 then mem:write_u8(0x6200, 0) end
 
-				-- Speed ahead so P2 is waiting for P1
+				-- Slight speed ahead so P2 is waiting for P1
 				if s2["mode"] > 6 and s2["mode"] < 12 then
-					vid.throttled = false
-					vid.throttle_rate = 800
-					vid.frameskip = 8
+					vid.throttle_rate = 1.1
 				else
-					vid.throttled = true
 					vid.throttle_rate = 1
-					vid.frameskip = 0
 				end
 				-- Wait for sync with P1 session
 				if s2["mode"] == 12 and s1["mode"] < 12 then
