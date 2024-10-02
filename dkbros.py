@@ -19,29 +19,28 @@ import threading
 import subprocess
 import ctypes
 
-UPDATE_LIST = [(":IN0", ":INX"), ("P1_", "PX_"), (":IN1", ":IN0"), ("P2_", "P1_"), (":INX", ":IN1"), ("PX_", "P2_")]
-
-# Are there optional parameters i.e. "WINDOW", "INVINCIBLE", "SHOW2" or "INVINCIBLE SHOW2"
-optional_parameters = ""
-if len(sys.argv) > 1:
-    optional_parameters = sys.argv[1].upper()
-
-# Windowed mode possible by providing "WINDOW" parameter or by creating a file named WINDOW or WINDOW.txt
-window = ""
-if "WINDOW" in optional_parameters or os.path.exists("WINDOW.txt") or os.path.exists("WINDOW"):
-    window = " -window"
-
-# autoboot command is craftily used to pass optional parameters to the plugin
 MAME_COMMAND = 'mame dkong -plugin coopkong -background_input -volume 0 -skip_gameinfo -prescale 20'
-session1_args = f'-autoboot_command "--S1 {optional_parameters}" -cfg_directory config\dkong_p1 -video bgfx {window}'
-session2_args = f'-autoboot_command "--S2 {optional_parameters}" -cfg_directory config\dkong_p2 -video none -window -seconds_to_run -1'
+UPDATE_LIST = [(":IN0", ":INX"), ("P1_", "PX_"), (":IN1", ":IN0"), ("P2_", "P1_"), (":INX", ":IN1"), ("PX_", "P2_")]
 
 def background_mame(session_specific_args):
     subprocess.Popen(f"{MAME_COMMAND} {session_specific_args}", creationflags=subprocess.CREATE_NO_WINDOW)
 
 if __name__ == "__main__":
-    os.chdir("wolf256")
+    # Are there optional parameters i.e. "WINDOW", "INVINCIBLE", "SHOW2" or "INVINCIBLE SHOW2"
+    optional_parameters = ""
+    if len(sys.argv) > 1:
+        optional_parameters = sys.argv[1].upper()
 
+    # Windowed mode possible by providing "WINDOW" parameter or by creating a file named WINDOW or WINDOW.txt
+    window = ""
+    if "WINDOW" in optional_parameters or os.path.exists("WINDOW.txt") or os.path.exists("WINDOW"):
+        window = " -window"
+
+    # autoboot command is craftily used to pass optional parameters to the plugin
+    session1_args = f'-autoboot_command "--S1 {optional_parameters}" -cfg_directory config\dkong_p1 -video bgfx {window}'
+    session2_args = f'-autoboot_command "--S2 {optional_parameters}" -cfg_directory config\dkong_p2 -video none -window -seconds_to_run -1'
+
+    os.chdir("wolf256")
     if os.path.exists("roms/dkong.zip"):
         # Create empty files for data exchange between sessions
         open("session/s1.dat", mode='a').close()
@@ -64,7 +63,7 @@ if __name__ == "__main__":
             t1.daemon = True
             t1.start()
 
-        if optional_parameters:
+        if optional_parameters and not window:
             subprocess.run(f"{MAME_COMMAND} {session1_args}")
         else:
             subprocess.run(f"{MAME_COMMAND} {session1_args}", creationflags=subprocess.CREATE_NO_WINDOW)

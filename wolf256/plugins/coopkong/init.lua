@@ -137,7 +137,7 @@ function coopkong.startplugin()
 			status = mem:read_u8(0x6005)		-- game status (1 attract, 2 coins in, 3 playing)
 			mode = mem:read_u8(0x600a)			-- mode
 			frame = scr:frame_number()			-- frame number (~60 fps)
-			--mem:write_u8(0x6227, 3)			-- force a specific stage
+			--mem:write_u8(0x6227, 2)			-- force a specific stage
 			--mem:write_u8(0x6229, 5)           -- force a specific level
 			stage = mem:read_u8(0x6227)			-- active stage (1=barrels, 2=pies, 3=springs, 4=rivets)
 
@@ -181,7 +181,7 @@ function coopkong.startplugin()
 
 				-- Slight speed ahead so P2 is waiting for P1
 				if s2["mode"] > 6 and s2["mode"] < 12 then
-					vid.throttle_rate = 1.15
+					vid.throttle_rate = 1.25
 				else
 					vid.throttle_rate = 1
 				end
@@ -246,7 +246,7 @@ function coopkong.startplugin()
 				f2:flush()
 				--------------------------------------------------------------------------------------------------------
 			end
-			
+
 			if session == 1 then
 				--[[
 				  #####                                            #   
@@ -308,7 +308,7 @@ function coopkong.startplugin()
 
 				-- Flashing 2UP in time with 1UP
 				if mem:read_u8(0x7740) ~= 0x10 then write_message(0x74e0, "2UP") else write_message(0x74e0, "   ") end
-						
+
 				-- Store lowest players Y position at 0x6102 for barrel logic mod
 				if s2["y"] > s1["y"] then mem:write_u8(0x6102, s2["y"]) else mem:write_u8(0x6102, s1["y"]) end
 
@@ -318,17 +318,17 @@ function coopkong.startplugin()
 				-- Show P2 points scored
 				local _points, _oldpoints
 				if s2["mode"] == 12 and olds2 then
-					for i=0x6a30, 0x6a34 do 
+					for i=0x6a30, 0x6a34 do
 						_points, _oldpoints = s2["points-"..tostring(0x6a30)] or 0, olds2["points-"..tostring(0x6a30)] or 0
-						if _points and (tonumber(_points) > 0 or tonumber(_oldpoints) > 0) then 
+						if _points and (tonumber(_points) > 0 or tonumber(_oldpoints) > 0) then
 							mem:write_u8(i, s2["points-"..tostring(i)])
 						end
 					end
 				end
-				
+
 				-- Check and remove P2 rivets
 				if s2["mode"] == 12 and stage == 4 then -- check and remove P2 rivets
-					for i=0x6292,0x6299 do 
+					for i=0x6292,0x6299 do
 						if mem:read_u8(i) == 1 then
 							-- Has P2 done this rivet?
 							if s2["rivet-"..tostring(i)] == 0 then
@@ -340,7 +340,7 @@ function coopkong.startplugin()
 						end
 					end
 				end
-				
+
 				-- Remove bonus items collected by P2
 				if s2["mode"] == 12 and stage > 1 then
 					for i=0x6a0c, 0x6a14, 4 do
@@ -365,16 +365,15 @@ function coopkong.startplugin()
 				if hammer_pos[stage] then
 					if s1["mode"] >= 11 and s1["mode"] <= 13 then
 						if s2["hammer_1_avail"] == 1 then draw_sprite(0, pal_default, hammer_pos[stage][1], hammer_pos[stage][2]) end
-						if s2["hammer_2_avail"] == 1 then draw_sprite(0, pal_default, hammer_pos[stage][3], hammer_pos[stage][4]) end				
+						if s2["hammer_2_avail"] == 1 then draw_sprite(0, pal_default, hammer_pos[stage][3], hammer_pos[stage][4]) end
 					end
 				end
 
-				-- Update fire sprite to blue colour when P2 is smashing
-				if s1["mode"] == 12 and s2["mode"] == 12 then
-					if s2["hammer_active"] == 1 then
-						for i=0x69d0, 0x69ef, 0x04 do mem:write_u8(i+2, 0) end
-					end
+				-- Update fire sprite to alternative blue colour when P2 is smashing.
+				if s1["mode"] == 12 and s2["mode"] == 12 and s2["hammer_active"] == 1 then
+					for i=0x69d0, 0x69ef, 0x04 do mem:write_u8(i+2, 12) end
 				end
+
 				-- clear any smash sprite remnants
 				if s2["enemy_hit"] == 0 and olds2 and olds2["enemy_hit"] == 1 then mem:write_u8(0x6a2d, 0x64) end
 
