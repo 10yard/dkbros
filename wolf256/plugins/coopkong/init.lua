@@ -6,7 +6,7 @@
 #     # #  #      #     # #####  #    #      # ### 
 #     # #   #     #     # #   #  #    # #    # ### 
 ######  #    #    ######  #    #  ####   ####  ###
-PROTOTYPE by 10yard
+PROTOTYPE C by 10yard
 
 The arcade version of Donkey Kong is adapted for 2 player co-operative gameplay.
 For x64 Windows only. 
@@ -18,7 +18,7 @@ Session 1 (foreground) and session 2 (background) are synchronised with data mer
 ]]
 local exports = {}
 exports.name = "coopkong"
-exports.version = "0.2"
+exports.version = "0.3"
 exports.description = "DK Bros: Multiplayer Co-Op Donkey Kong"
 exports.license = "GNU GPLv3"
 exports.author = { name = "Jon Wilson (10yard)" }
@@ -27,9 +27,10 @@ local coopkong = exports
 function coopkong.startplugin()
 	local mac, scr, cpu, mem, snd, prt, vid
 	local parameters, session, invincible, show2
-	local attenuation, frame, hitframe, cleanup
+	local attenuation, frame, cleanup
 	local status, mode, stage, combined
 	local address, offset, size
+	local hitframe = 0
 
 	local s1, s2, olds1, olds2 = {}, {}, {}, {}  -- session data
 	local characters = "0123456789       ABCDEFGHIJKLMNOPQRSTUVWXYZ@-"
@@ -101,9 +102,10 @@ function coopkong.startplugin()
 			write_rom_message(0x36ff, "  ANY START BUTTON   ")					-- Mod: Start text 2P
 			write_data(0x0210, {0x3e, 0x07}) 									-- Mod: Starting lives to 7
 			write_data(0x130d, {0x00, 0x90}) 									-- Mod: Disable high score entry
-			write_data(0x20b2, {0, 0, 0})										-- Mod: Barrels keep rolling under P1
-			write_data(0x2184, {0, 0})											-- Mod: Barrels can take ladders when under P1
-			write_rom_message(0x336b, 0)										-- Mod: Fires can go down ladders when P1 is above
+			write_data(0x20aa, {0x02, 0x61})									-- Mod: Barrel logic. Roll to lowest player (in 0x6102)
+			write_data(0x2180, {0x02, 0x61})									-- Mod: Barrels logic. Can take ladders until lowest player
+			write_data(0x3364, {0x02, 0x61})									-- Mod: Fires logic. Fires track both players.
+			write_data(0x34c0, {0x03, 0x61})									-- Mod: Fireball spawning logic.  Use average X position.
 			for i=0x096b, 0x0975 do mem:write_direct_u8(i, 0x00) end			-- Mod: Remove high score table
 			if invincible == 1 then write_data(0x2813, {0x3e, 0x00, 0x00}) end	-- Mod: Invincible to enemies
 				
@@ -179,7 +181,7 @@ function coopkong.startplugin()
 
 				-- Slight speed ahead so P2 is waiting for P1
 				if s2["mode"] > 6 and s2["mode"] < 12 then
-					vid.throttle_rate = 1.1
+					vid.throttle_rate = 1.15
 				else
 					vid.throttle_rate = 1
 				end
@@ -192,12 +194,11 @@ function coopkong.startplugin()
 					emu.unpause()
 				end
 
-
 				-- mute music and non-gameplay sounds from session 2
 				if s2["mode"] ~= 12 then snd.attenuation = -32 else snd.attenuation = attenuation end
 
 				-- Adjust P2 start position
-				if s2["mode"] == 12 and olds2 and olds2["mode"] < 12 then mem:write_u8(0x6203, mem:read_u8(0x6203) + 4) end
+				if s2["mode"] == 12 and olds2 and olds2["mode"] < 12 then mem:write_u8(0x6203, mem:read_u8(0x6203) + 2) end
 
 				-- Remove bonus items collected by P1
 				if s1["mode"] == 12 and stage > 1 then
@@ -260,6 +261,8 @@ function coopkong.startplugin()
 
 				s1["frame"] = frame
 				s1["mode"] = mode
+				s1["x"] = mem:read_u8(0x6203)
+				s1["y"] = mem:read_u8(0x6205)
 
 				-- Retrieve session 2 info --------------------------------------------------------------------------------
 				f2:seek("set")  -- set cursor to start of file
@@ -282,6 +285,8 @@ function coopkong.startplugin()
 				for i=0x6a0c, 0x6a14, 4 do s2["item-"..tostring(i)] = tonumber(f2:read("*line")) end -- bonus items
 				-----------------------------------------------------------------------------------------------------------
 
+				if status < 3 then display_title() end
+
 				-- Sync P2 dead with P1
 				if s2["alive"] == 0 and olds2 and olds2["alive"] == 1 then mem:write_u8(0x6200, 0) end
 
@@ -295,8 +300,6 @@ function coopkong.startplugin()
 					vid.throttle_rate = 1
 				end
 
-				if status < 3 then display_title() end
-
 				-- display arrows indicating that scores are combined
 				if s1["mode"] and s1["mode"] > 0 then
 					draw_sprite(6, pal_arrow, 248, 60)
@@ -306,6 +309,12 @@ function coopkong.startplugin()
 				-- Flashing 2UP in time with 1UP
 				if mem:read_u8(0x7740) ~= 0x10 then write_message(0x74e0, "2UP") else write_message(0x74e0, "   ") end
 						
+				-- Store lowest players Y position at 0x6102 for barrel logic mod
+				if s2["y"] > s1["y"] then mem:write_u8(0x6102, s2["y"]) else mem:write_u8(0x6102, s1["y"]) end
+
+				-- Store average X position for fire spawning at 0x6103
+				mem:write_u8(0x6103, math.floor((s1["x"] + s2["x"]) / 2))
+
 				-- Show P2 points scored
 				local _points, _oldpoints
 				if s2["mode"] == 12 and olds2 then
@@ -489,7 +498,7 @@ function coopkong.startplugin()
 		write_message(0x77b1 + i, "+ + + +   + + + + + +   + ++")
 		write_message(0x77b2 + i, "++  +  +  +++ + + +++ +++ ++")
 		write_message(0x77b3 + i, "                            ")
-		if frame % 160 < 80 then write_message(0x77bf, "PROTOTYPE B") else write_message(0x77bf, "BY 10YARD  ") end
+		if frame % 160 < 80 then write_message(0x77bf, "PROTOTYPE C") else write_message(0x77bf, "BY 10YARD  ") end
 		-- if frame % 80 < 40 then mem:write_u8(0x6082, 0x01) end  -- Play DK Roar Sound
 		if invincible == 1 then write_message(0x7683, "INVINCIBLE") end  -- Invincible mode
 	end

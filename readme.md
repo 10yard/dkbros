@@ -29,10 +29,9 @@ Features
 
 - Each player gets their own hammers, and they can be smashed together
 
-- Player 1 gets the barrel control.  Player 2 doesn't control barrels but gets the advantage of 
-    not being targeted by barrels or fires.
+- Player 1 gets the barrel control.  
 
-- Pulling rivets is fun with 2 players sharing the task and it reduces some of the difficulty.
+- Pulling rivets is fun with 2 players sharing the task, and it reduces some of the difficulty.
 
 - If one player completes the stage then both players complete the stage together but the player 
     completing the stage gets the bonus points - unless you finish exactly at the same time.
