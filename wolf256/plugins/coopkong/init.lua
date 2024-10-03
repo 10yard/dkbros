@@ -107,6 +107,8 @@ function coopkong.startplugin()
 			write_data(0x2180, {0x02, 0x61})									-- Mod: Barrels logic. Can take ladders until lowest player
 			write_data(0x3364, {0x02, 0x61})									-- Mod: Fires logic. Fires track both players.
 			write_data(0x34c0, {0x03, 0x61})									-- Mod: Fireball spawning logic.  Use average X position.
+			write_data(0x057a, {0xff, 0xff})  									-- Mod: Remove high score to prevent flicker
+
 			for i=0x096b, 0x0975 do mem:write_direct_u8(i, 0x00) end			-- Mod: Remove high score table
 			if invincible == 1 then write_data(0x2813, {0x3e, 0x00, 0x00}) end	-- Mod: Invincible to enemies
 				
@@ -183,7 +185,7 @@ function coopkong.startplugin()
 				-- Slight speed ahead so P2 is waiting for P1
 				if s2["mode"] > 6 and s2["mode"] < 12 then
 					scr:draw_text(0, 0, "Speed ahead...", 0xffffffff)
-					vid.throttle_rate = 1.5
+					vid.throttle_rate = 2
 				else
 					vid.throttle_rate = 1
 				end
@@ -191,9 +193,11 @@ function coopkong.startplugin()
 				-- Wait for sync with P1 session
 				if s2["mode"] == 12 and s1["mode"] < 12 then
 					scr:draw_text(0, 0, "Waiting for sync...", 0xffffffff)
+					snd.attenuation = -32
 					emu.pause()
 				else
 					emu.unpause()
+					snd.attenuation = attenuation
 				end
 
 				-- mute music and non-gameplay sounds from session 2
@@ -296,7 +300,7 @@ function coopkong.startplugin()
 				if s1["mode"] == 12 and s2["mode"] < 12 then
 					scr:draw_text(0, 0, "Waiting for sync...", 0xffffffff)
 					snd.attenuation = -32
-					vid.throttle_rate = 0.05
+					vid.throttle_rate = 0.033
 				else
 					snd.attenuation = attenuation
 					vid.throttle_rate = 1
@@ -314,7 +318,7 @@ function coopkong.startplugin()
 				-- Store lowest players Y position at 0x6102 for barrel logic mod
 				if s2["y"] > s1["y"] then mem:write_u8(0x6102, s2["y"]) else mem:write_u8(0x6102, s1["y"]) end
 
-				-- Store average X position for fire spawning at 0x6103
+				-- Store average X position for fire spawning mod at 0x6103
 				mem:write_u8(0x6103, math.floor((s1["x"] + s2["x"]) / 2))
 
 				-- Show P2 points scored
@@ -455,7 +459,9 @@ function coopkong.startplugin()
 
 				-- Display combined score inplace of high score
 				combined = string.format("%07d", tonumber(read_score(0x7781, 6)) + tonumber(read_score(0x7521, 6)))
-				if #combined == 7 then write_message(0x7661, combined, 0x70) end				
+				if #combined == 7 then
+					write_message(0x7661, combined, 0x70)
+				end
 
 				-- Store session 1 info --------------------------------------------------------------------------------
 				f1:seek("set")  -- set cursor to start of file

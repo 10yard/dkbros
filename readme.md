@@ -10,13 +10,13 @@
 
 PROTOTYPE by Jon Wilson (10yard)
 
-The arcade version of Donkey Kong is adapted for 2 player co-operative gameplay.
+The arcade version of Donkey Kong adapted for 2 player co-operative gameplay.
 
 DKBros. includes a program wrapper and a LUA plugin for MAME.    
 
 How to Play
 -----------
-Extract the contents of the dkbros_prototype zip file.
+Extract the contents of the dkbros_prototype zip file.  It includes everything you need apart from the `dkong.zip` rom file.
 
 Place your `dkong.zip` into the wolf256\roms folder.
 
@@ -94,7 +94,11 @@ The Donkey Kong rom hacking resource - https://github.com/furrykef/dkdasm
 
 The MAMEdev team - https://docs.mamedev.org/
 
-WolfMAME by Mahlemiut -https://github.com/mahlemiut/wolfmame
+WolfMAME by Mahlemiut - https://github.com/mahlemiut/wolfmame
+
+Mr2Nut123 for his ideas and assistance with testing - https://www.twitch.tv/mr2nut123
+
+Paul Goes for his assistance with testing - https://donkeykonghacks.net/
 
 
 Feedback

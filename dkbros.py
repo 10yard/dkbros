@@ -7,7 +7,7 @@
 *     * *   *     *     * *   *  *    * *    * ***
 ******  *    *    ******  *    *  ****   ****  ***
 2 Player co-op Donkey Kong.
-Prototype by 10yard
+Prototype D by 10yard
 
 A wrapper for MAME to simplify launch of the DKBros. plugin and
 to synchronise realtime data across 2 sessions. Session 2 is
@@ -19,8 +19,8 @@ import threading
 import subprocess
 import ctypes
 
-MAME_COMMAND = 'dkmame dkong -plugin coopkong -background_input -volume 0 -skip_gameinfo'
-VIDEO = '-video bgfx -bgfx_screen_chains unfiltered'
+MAME_COMMAND = 'dkmame dkong -plugin coopkong -background_input -volume 0 -skip_gameinfo -throttle -nosleep'
+DEFAULT_VIDEO = '-video bgfx -bgfx_screen_chains unfiltered'
 UPDATE_LIST = [(":IN0", ":INX"), ("P1_", "PX_"), (":IN1", ":IN0"), ("P2_", "P1_"), (":INX", ":IN1"), ("PX_", "P2_")]
 
 def background_mame(session_specific_args):
@@ -38,7 +38,7 @@ if __name__ == "__main__":
         window = " -window"
 
     # autoboot command is craftily used to pass optional parameters to the plugin
-    session1_args = f'-autoboot_command "--S1 {optional_parameters}" -cfg_directory config\dkong_p1 {VIDEO} {window}'
+    session1_args = f'-autoboot_command "--S1 {optional_parameters}" -cfg_directory config\dkong_p1 {DEFAULT_VIDEO} {window}'
     session2_args = f'-autoboot_command "--S2 {optional_parameters}" -cfg_directory config\dkong_p2 -video none -window -seconds_to_run -1'
 
     os.chdir("wolf256")
@@ -53,15 +53,15 @@ if __name__ == "__main__":
         if "SYNCINPUT" in optional_parameters:
             session2_args = session2_args.replace("-cfg_directory config\dkong_p2", f"-cfg_directory config\dkong_p1")
 
-        # creating thread for MAME session 2.  This ends when the main process ends (with session 2).
         if "SHOW2" in optional_parameters:
             session1_args += " -window"
-            session2_args = session2_args.replace("-video none", VIDEO)
+            session2_args = session2_args.replace("-video none", DEFAULT_VIDEO)
             background_mame(session2_args)
         else:
-            t1 = threading.Thread(target=background_mame, args=(session2_args,) )
-            t1.daemon = True
-            t1.start()
+            # create thread for session 2.  This ends with the main process.
+            t2 = threading.Thread(target=background_mame, args=(session2_args,) )
+            t2.daemon = True
+            t2.start()
 
         if optional_parameters and not window:
             subprocess.run(f"{MAME_COMMAND} {session1_args}")
