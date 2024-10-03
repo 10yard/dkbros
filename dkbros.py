@@ -19,7 +19,8 @@ import threading
 import subprocess
 import ctypes
 
-MAME_COMMAND = 'mame dkong -plugin coopkong -background_input -volume 0 -skip_gameinfo -prescale 20'
+MAME_COMMAND = 'dkmame dkong -plugin coopkong -background_input -volume 0 -skip_gameinfo'
+VIDEO = '-video bgfx -bgfx_screen_chains unfiltered'
 UPDATE_LIST = [(":IN0", ":INX"), ("P1_", "PX_"), (":IN1", ":IN0"), ("P2_", "P1_"), (":INX", ":IN1"), ("PX_", "P2_")]
 
 def background_mame(session_specific_args):
@@ -37,7 +38,7 @@ if __name__ == "__main__":
         window = " -window"
 
     # autoboot command is craftily used to pass optional parameters to the plugin
-    session1_args = f'-autoboot_command "--S1 {optional_parameters}" -cfg_directory config\dkong_p1 -video bgfx {window}'
+    session1_args = f'-autoboot_command "--S1 {optional_parameters}" -cfg_directory config\dkong_p1 {VIDEO} {window}'
     session2_args = f'-autoboot_command "--S2 {optional_parameters}" -cfg_directory config\dkong_p2 -video none -window -seconds_to_run -1'
 
     os.chdir("wolf256")
@@ -55,8 +56,7 @@ if __name__ == "__main__":
         # creating thread for MAME session 2.  This ends when the main process ends (with session 2).
         if "SHOW2" in optional_parameters:
             session1_args += " -window"
-            session2_args = session2_args.replace("-video none", f"-video bgfx")
-            # subprocess.run(f"{MAME_COMMAND} {session2_args}")
+            session2_args = session2_args.replace("-video none", VIDEO)
             background_mame(session2_args)
         else:
             t1 = threading.Thread(target=background_mame, args=(session2_args,) )
@@ -83,5 +83,8 @@ if __name__ == "__main__":
                     text = text.replace(u[0], u[1])
                 with open("config\dkong_p2\dkong.cfg", "w") as w:
                     w.write(text)
+
+        # Cleanup any redundant instances of dkmame
+        subprocess.run(f"taskkill /f /IM dkmame.exe", creationflags=subprocess.CREATE_NO_WINDOW)
     else:
         ctypes.windll.user32.MessageBoxW(0, "You must place your dkong.zip file into the wolf256\\roms folder.", "Missing dkong.zip", 0)

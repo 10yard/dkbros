@@ -6,7 +6,7 @@
 #     # #  #      #     # #####  #    #      # ### 
 #     # #   #     #     # #   #  #    # #    # ### 
 ######  #    #    ######  #    #  ####   ####  ###
-PROTOTYPE C by 10yard
+PROTOTYPE D by 10yard
 
 The arcade version of Donkey Kong is adapted for 2 player co-operative gameplay.
 For x64 Windows only. 
@@ -18,13 +18,14 @@ Session 1 (foreground) and session 2 (background) are synchronised with data mer
 ]]
 local exports = {}
 exports.name = "coopkong"
-exports.version = "0.3"
+exports.version = "0.4"
 exports.description = "DK Bros: Multiplayer Co-Op Donkey Kong"
 exports.license = "GNU GPLv3"
 exports.author = { name = "Jon Wilson (10yard)" }
 local coopkong = exports
 
 function coopkong.startplugin()
+	-- Function variables (they're upvalues)
 	local mac, scr, cpu, mem, snd, prt, vid
 	local parameters, session, invincible, show2
 	local attenuation, frame, cleanup
@@ -59,7 +60,7 @@ function coopkong.startplugin()
 	local destroy_seq = {2, 3, 2, 3, 2, 3, 4, 5, 5, 5, 5}
 	local hammer_pos = {{167, 15, 75, 166}, {126, 14, 87, 102}, nil, {127, 6, 167, 103}}
 	local rivet_pos = {0x76cb, 0x752b, 0x76d0, 0x7530, 0x76d5, 0x7535, 0x76da, 0x753a}
-	
+
 	function initialize()
 		--[[
 		 ###                                                                      
@@ -137,7 +138,7 @@ function coopkong.startplugin()
 			status = mem:read_u8(0x6005)		-- game status (1 attract, 2 coins in, 3 playing)
 			mode = mem:read_u8(0x600a)			-- mode
 			frame = scr:frame_number()			-- frame number (~60 fps)
-			--mem:write_u8(0x6227, 2)			-- force a specific stage
+			--mem:write_u8(0x6227, 4)			-- force a specific stage
 			--mem:write_u8(0x6229, 5)           -- force a specific level
 			stage = mem:read_u8(0x6227)			-- active stage (1=barrels, 2=pies, 3=springs, 4=rivets)
 
@@ -181,7 +182,8 @@ function coopkong.startplugin()
 
 				-- Slight speed ahead so P2 is waiting for P1
 				if s2["mode"] > 6 and s2["mode"] < 12 then
-					vid.throttle_rate = 1.25
+					scr:draw_text(0, 0, "Speed ahead...", 0xffffffff)
+					vid.throttle_rate = 1.5
 				else
 					vid.throttle_rate = 1
 				end
@@ -327,7 +329,7 @@ function coopkong.startplugin()
 				end
 
 				-- Check and remove P2 rivets
-				if s2["mode"] == 12 and stage == 4 then -- check and remove P2 rivets
+				if (s2["mode"] == 12 or (olds2 and olds2["mode"] == 12)) and stage == 4 then -- check and remove P2 rivets
 					for i=0x6292,0x6299 do
 						if mem:read_u8(i) == 1 then
 							-- Has P2 done this rivet?
@@ -497,7 +499,7 @@ function coopkong.startplugin()
 		write_message(0x77b1 + i, "+ + + +   + + + + + +   + ++")
 		write_message(0x77b2 + i, "++  +  +  +++ + + +++ +++ ++")
 		write_message(0x77b3 + i, "                            ")
-		if frame % 160 < 80 then write_message(0x77bf, "PROTOTYPE C") else write_message(0x77bf, "BY 10YARD  ") end
+		if frame % 160 < 80 then write_message(0x77bf, "PROTOTYPE D") else write_message(0x77bf, "BY 10YARD  ") end
 		-- if frame % 80 < 40 then mem:write_u8(0x6082, 0x01) end  -- Play DK Roar Sound
 		if invincible == 1 then write_message(0x7683, "INVINCIBLE") end  -- Invincible mode
 	end

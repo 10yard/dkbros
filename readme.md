@@ -16,9 +16,12 @@ DKBros. includes a program wrapper and a LUA plugin for MAME.
 
 How to Play
 -----------
-Place your `dkong.zip` file into the wolf256\roms folder.
+Extract the contents of the dkbros_prototype zip file.
+
+Place your `dkong.zip` into the wolf256\roms folder.
 
 Run the `dkbros.exe` program.  This will set up a 2 player co-op Donkey Kong session in MAME.  
+
 Press the start button to play or see below for notes on configuring the controls.
 
 
