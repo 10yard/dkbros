@@ -6,7 +6,7 @@
 #     # #  #      #     # #####  #    #      # ### 
 #     # #   #     #     # #   #  #    # #    # ### 
 ######  #    #    ######  #    #  ####   ####  ###
-PROTOTYPE D by 10yard
+PROTOTYPE E by 10yard
 
 The arcade version of Donkey Kong is adapted for 2 player co-operative gameplay.
 For x64 Windows only. 
@@ -18,7 +18,7 @@ Session 1 (foreground) and session 2 (background) are synchronised with data mer
 ]]
 local exports = {}
 exports.name = "coopkong"
-exports.version = "0.4"
+exports.version = "0.5"
 exports.description = "DK Bros: Multiplayer Co-Op Donkey Kong"
 exports.license = "GNU GPLv3"
 exports.author = { name = "Jon Wilson (10yard)" }
@@ -27,11 +27,11 @@ local coopkong = exports
 function coopkong.startplugin()
 	-- Function variables (they're upvalues)
 	local mac, scr, cpu, mem, snd, prt, vid
-	local parameters, session, invincible, show2
+	local parameters, session, invincible, show2, audit
 	local attenuation, frame, cleanup
 	local status, mode, stage, combined
 	local address, offset, size
-	local hitframe = 0
+	local hitframe, exitframe = 0, 0
 
 	local s1, s2, olds1, olds2 = {}, {}, {}, {}  -- session data
 	local characters = "0123456789       ABCDEFGHIJKLMNOPQRSTUVWXYZ@-"
@@ -95,7 +95,8 @@ function coopkong.startplugin()
 			-- Check for other parameters
 			if string.find(parameters, "INVINCIBLE") then invincible = 1 end
 			if string.find(parameters, "SHOW2") then show2 = 1 end
-					
+			if string.find(parameters, "AUDIT") then audit = 1 end
+
 			-- ROM modifications
 			write_rom_message(0x36b4, " DK BROS@ ")								-- Mod: Update title
 			write_rom_message(0x36ce, "HOW HIGH CAN TWO GET")					-- Mod: Update how high text
@@ -119,6 +120,11 @@ function coopkong.startplugin()
 			
 			-- open random access session files for data exchange
 			f1, f2 = io.open("session/s1.dat", "r+"),  io.open("session/s2.dat", "r+")
+
+			-- optional performance audit to csv file
+			if audit == 1 then
+				pa1, pa2 = io.open("session/perf1.csv", "w"), io.open("session/perf2.csv", "w")
+			end
 		end
 	end
 	
@@ -185,9 +191,10 @@ function coopkong.startplugin()
 				-- Slight speed ahead so P2 is waiting for P1
 				if s2["mode"] > 6 and s2["mode"] < 12 then
 					scr:draw_text(0, 0, "Speed ahead...", 0xffffffff)
-					vid.throttle_rate = 2
+					vid.throttle_rate = 1.15
 				else
 					vid.throttle_rate = 1
+					if pa2 then pa2:write(performance_stats()) end
 				end
 
 				-- Wait for sync with P1 session
@@ -204,7 +211,7 @@ function coopkong.startplugin()
 				if s2["mode"] ~= 12 then snd.attenuation = -32 else snd.attenuation = attenuation end
 
 				-- Adjust P2 start position
-				if s2["mode"] == 12 and olds2 and olds2["mode"] < 12 then mem:write_u8(0x6203, mem:read_u8(0x6203) + 2) end
+				if s2["mode"] == 12 and olds2 and olds2["mode"] < 12 then mem:write_u8(0x6203, mem:read_u8(0x6203) + 3) end
 
 				-- Remove bonus items collected by P1
 				if s1["mode"] == 12 and stage > 1 then
@@ -265,6 +272,12 @@ function coopkong.startplugin()
 				]]
 				if mac.paused then emu.unpause() end -- disable session 1 pausing
 
+				-- Handle change of configuration.  Prompt user to exit.
+				if manager.ui.menu_active then exitframe = frame end
+				if not manager.ui.menu_active and exitframe > 0 and frame < exitframe + 300 then
+					mac:popmessage("Please exit DKBros. to update your configuration")
+				end
+
 				s1["frame"] = frame
 				s1["mode"] = mode
 				s1["x"] = mem:read_u8(0x6203)
@@ -300,10 +313,11 @@ function coopkong.startplugin()
 				if s1["mode"] == 12 and s2["mode"] < 12 then
 					scr:draw_text(0, 0, "Waiting for sync...", 0xffffffff)
 					snd.attenuation = -32
-					vid.throttle_rate = 0.033
+					vid.throttle_rate = 0.05
 				else
 					snd.attenuation = attenuation
 					vid.throttle_rate = 1
+					if pa1 then pa1:write(performance_stats()) end
 				end
 
 				-- display arrows indicating that scores are combined
@@ -359,7 +373,7 @@ function coopkong.startplugin()
 					mem:write_u8(0x697c, s2["x"])
 					mem:write_u8(0x697f, s2["y"])
 					mem:write_u8(0x697d, s2["sprite"])
-					mem:write_u8(0x697e, 0x0c)  -- Set Jumpman color to blue
+					mem:write_u8(0x697e, 12)  -- Set Jumpman color to blue
 					if stage == 3 then
 						-- redraw hijacked sprite on springs stage
 						draw_sprite(7, pal_mount, 18, 95)
@@ -439,9 +453,9 @@ function coopkong.startplugin()
 				if s1["mode"] == 12 and s2["mode"] == 0x16 then
 					mem:write_u8(0x638c, 0)  -- don't award bonus points,  P2 gets the bonus
 					mem:write_u8(0x62b1, 0)  -- don't award bonus points,  P2 gets the bonus
-					if stage < 4 then mem:write_u8(0x6205, 0x30) else mem:write_u8(0x6290, 0) end	
+					if stage < 4 then mem:write_u8(0x6205, 0x30) else mem:write_u8(0x6290, 0) end
 				end
-														
+
 				-- Force delay when player 2 is smashing an enemy
 				if s1["mode"] == 12 then
 					if s2["enemy_hit"] == 1 then
@@ -478,7 +492,9 @@ function coopkong.startplugin()
 				for i=0x6700, 0x683f do f1:write(mem:read_u8(i).."\n") end		-- barrels (x10)
 				for i=0x6280, 0x628f do f1:write(mem:read_u8(i).."\n") end		-- retractable ladders
 				for i=0x62a0, 0x62a6 do f1:write(mem:read_u8(i).."\n") end		-- conveyors
-				for i=0x6600, 0x665f do f1:write(mem:read_u8(i).."\n") end		-- elevators (x6)
+				if stage == 3 then
+					for i=0x6600, 0x665f do f1:write(mem:read_u8(i).."\n") end		-- elevators (x6)
+				end
 				f1:flush()
 				--------------------------------------------------------------------------------------------------------
 			end
@@ -497,23 +513,24 @@ function coopkong.startplugin()
 	]]
 	
 	function display_title()
-		local i = ({0, 1, 2, 3, 4, 5, 6, 7, 8, 7, 6, 5, 4, 3, 2, 1})[math.floor((frame / 10) % 16) + 1]
-		write_message(0x77ad + i, "                            ")
-		write_message(0x77ae + i, "++  +  +  +++ +++ +++ +++   ")
-		write_message(0x77af + i, "+ + + +   + + + + + + +     ")
-		write_message(0x77b0 + i, "+ + ++    ++  ++  + + +++   ")
-		write_message(0x77b1 + i, "+ + + +   + + + + + +   + ++")
-		write_message(0x77b2 + i, "++  +  +  +++ + + +++ +++ ++")
-		write_message(0x77b3 + i, "                            ")
-		if frame % 160 < 80 then write_message(0x77bf, "PROTOTYPE D") else write_message(0x77bf, "BY 10YARD  ") end
-		-- if frame % 80 < 40 then mem:write_u8(0x6082, 0x01) end  -- Play DK Roar Sound
-		if invincible == 1 then write_message(0x7683, "INVINCIBLE") end  -- Invincible mode
+		if frame % 10 == 0 then
+			local i = ({0, 1, 2, 3, 4, 5, 6, 7, 8, 7, 6, 5, 4, 3, 2, 1})[math.floor((frame / 10) % 16) + 1]
+			write_message(0x77ad + i, "                            ")
+			write_message(0x77ae + i, "++  +  +  +++ +++ +++ +++   ")
+			write_message(0x77af + i, "+ + + +   + + + + + + +     ")
+			write_message(0x77b0 + i, "+ + ++    ++  ++  + + +++   ")
+			write_message(0x77b1 + i, "+ + + +   + + + + + +   + ++")
+			write_message(0x77b2 + i, "++  +  +  +++ + + +++ +++ ++")
+			write_message(0x77b3 + i, "                            ")
+			if frame % 160 < 80 then write_message(0x77bf, "PROTOTYPE E") else write_message(0x77bf, "BY 10YARD  ") end
+			if invincible == 1 then write_message(0x7683, "INVINCIBLE") end  -- Invincible mode
+		end
 	end
 	
 	function blank_screen()
 		scr:draw_box(0, 0, 256, 224, 0xff000000, 0xff000000)
 	end
-	
+
 	function write_data(addr, values)
 		for k, v in ipairs(values) do
 			mem:write_direct_u8(addr + k - 1, v)
@@ -573,7 +590,19 @@ function coopkong.startplugin()
 			mem:write_direct_u8(start_addr + (key - 1), string.find(characters, string.sub(text, key, key)) - 1)
 		end
 	end	
-	
+
+	function performance_stats()
+		-- Return performance stats as CSV
+		-- frame, stage, mode, expected speed, actual speed, difference
+		if mode == 12 then
+			return tostring(frame)..","..tostring(stage)..","..tostring(mode)..","..
+					tostring(string.format("%.3f", vid.throttle_rate * 100))..","..
+					tostring(string.format("%.3f", vid.speed_percent * 100))..","..
+					tostring(string.format("%.3f", (vid.throttle_rate - vid.speed_percent) * 100)).."\n"
+		end
+	end
+
+
 	emu.add_machine_reset_notifier(function()	
 		initialize()
 	end)
@@ -581,6 +610,8 @@ function coopkong.startplugin()
 	emu.add_machine_stop_notifier(function()
 		f1:close()
 		f2:close()
+		if pa1 then	pa1:close() end
+		if pa2 then	pa2:close() end
 	end)
 	
 	emu.register_frame_done(main, "frame")

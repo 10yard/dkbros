@@ -7,7 +7,7 @@
 *     * *   *     *     * *   *  *    * *    * ***
 ******  *    *    ******  *    *  ****   ****  ***
 2 Player co-op Donkey Kong.
-Prototype D by 10yard
+Prototype E by 10yard
 
 A wrapper for MAME to simplify launch of the DKBros. plugin and
 to synchronise realtime data across 2 sessions. Session 2 is
@@ -19,7 +19,7 @@ import threading
 import subprocess
 import ctypes
 
-MAME_COMMAND = 'dkmame dkong -plugin coopkong -background_input -volume 0 -skip_gameinfo -throttle -nosleep'
+MAME_COMMAND = 'dkmame dkong -plugin coopkong -background_input -volume 0 -skip_gameinfo -throttle -nosleep -autoframeskip'
 DEFAULT_VIDEO = '-video bgfx -bgfx_screen_chains unfiltered'
 UPDATE_LIST = [(":IN0", ":INX"), ("P1_", "PX_"), (":IN1", ":IN0"), ("P2_", "P1_"), (":INX", ":IN1"), ("PX_", "P2_")]
 

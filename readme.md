@@ -8,7 +8,7 @@
     o     o o   o     o     o o   o  o    o o    o ooo 
     oooooo  o    o    oooooo  o    o  oooo   oooo  ooo
 
-PROTOTYPE by Jon Wilson (10yard)
+PROTOTYPE E by Jon Wilson (10yard)
 
 The arcade version of Donkey Kong adapted for 2 player co-operative gameplay.
 
