@@ -148,8 +148,8 @@ function coopkong.startplugin()
 			status = mem:read_u8(0x6005)		-- game status (1 attract, 2 coins in, 3 playing)
 			mode = mem:read_u8(0x600a)			-- mode
 			frame = scr:frame_number()			-- frame number (~60 fps)
-			mem:write_u8(0x6227, 4)			-- force a specific stage
-			mem:write_u8(0x6229, 5)           -- force a specific level
+			--mem:write_u8(0x6227, 4)			-- force a specific stage
+			--mem:write_u8(0x6229, 5)           -- force a specific level
 			stage = mem:read_u8(0x6227)			-- active stage (1=barrels, 2=pies, 3=springs, 4=rivets)
 
 			if session == 2 then
