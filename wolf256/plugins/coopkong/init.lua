@@ -124,6 +124,8 @@ function coopkong.startplugin()
 			-- optional performance audit to csv file
 			if audit == 1 then
 				pa1, pa2 = io.open("session/perf1.csv", "w"), io.open("session/perf2.csv", "w")
+				pa1:write("frame,stage,mode,expected speed,actual speed,difference\n")
+				pa2:write("frame,stage,mode,expected speed,actual speed,difference\n")
 			end
 		end
 	end
