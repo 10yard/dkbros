@@ -56,7 +56,10 @@ if __name__ == "__main__":
         if "SHOW2" in optional_parameters:
             session1_args += " -window"
             session2_args = session2_args.replace("-video none", DEFAULT_VIDEO)
-            background_mame(session2_args)
+            if "CONSOLE" in optional_parameters:
+                subprocess.Popen(f"{MAME_COMMAND} {session2_args}")
+            else:
+                background_mame(session2_args)
         else:
             # create thread for session 2.  This ends with the main process.
             t2 = threading.Thread(target=background_mame, args=(session2_args,) )

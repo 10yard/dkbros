@@ -185,7 +185,7 @@ function coopkong.startplugin()
 				f1:flush()
 				--------------------------------------------------------------------------------------------------------
 
-				-- Sync P1 dead with P2
+				-- Sync: P2 also dies
 				if s1["alive"] == 0 and olds1 and olds1["alive"] == 1 then mem:write_u8(0x6200, 0) end
 
 				-- Slight speed ahead so P2 is waiting for P1
@@ -220,7 +220,7 @@ function coopkong.startplugin()
 					end
 				end
 
-				-- Sync P1 finish with P2
+				-- Sync: P2 also finishes
 				if s2["mode"] == 12 and s1["mode"] == 0x16 then
 					mem:write_u8(0x638c, 0)  -- don't award bonus points,  P1 gets the bonus
 					mem:write_u8(0x62b1, 0)  -- don't award bonus points,  P1 gets the bonus
@@ -306,7 +306,7 @@ function coopkong.startplugin()
 
 				if status < 3 then display_title() end
 
-				-- Sync P2 dead with P1
+				-- Sync: P1 also dies
 				if s2["alive"] == 0 and olds2 and olds2["alive"] == 1 then mem:write_u8(0x6200, 0) end
 
 				-- Wait for sync with P2 session.  This shouldn't really happen.
@@ -342,21 +342,6 @@ function coopkong.startplugin()
 						_points, _oldpoints = s2["points-"..tostring(0x6a30)] or 0, olds2["points-"..tostring(0x6a30)] or 0
 						if _points and (tonumber(_points) > 0 or tonumber(_oldpoints) > 0) then
 							mem:write_u8(i, s2["points-"..tostring(i)])
-						end
-					end
-				end
-
-				-- Check and remove P2 rivets
-				if (s2["mode"] == 12 or (olds2 and olds2["mode"] == 12)) and stage == 4 then -- check and remove P2 rivets
-					for i=0x6292,0x6299 do
-						if mem:read_u8(i) == 1 then
-							-- Has P2 done this rivet?
-							if s2["rivet-"..tostring(i)] == 0 then
-								mem:write_u8(i, 0) -- flag rivet as removed
-								mem:write_u8(0x6290, mem:read_u8(0x6290) - 1)  -- update rivet count
-								mem:write_u8(rivet_pos[i - 0x6291] - 1, 0x10) -- remove rivet from screen (top part)
-								mem:write_u8(rivet_pos[i - 0x6291], 0x10) -- remove rivet from screen (bottom part)
-							end
 						end
 					end
 				end
@@ -449,7 +434,26 @@ function coopkong.startplugin()
 					draw_sprite(destroy_seq[math.floor((frame - hitframe) / 8) % #destroy_seq + 1], pal_smash, 264 - s2["enemy_y"], s2["enemy_x"] - 8)
 				end
 
-				-- Sync P2 finish with P1
+				-- Check and remove P2 rivets
+				if (s2["mode"] == 12 or (olds2 and olds2["mode"] == 12)) and stage == 4 then -- check and remove P2 rivets
+					for i=0x6292,0x6299 do
+						if mem:read_u8(i) == 1 then
+							-- Has P2 done this rivet?
+							if s2["rivet-"..tostring(i)] == 0 then
+								mem:write_u8(i, 0) -- flag rivet as removed
+								mem:write_u8(0x6290, mem:read_u8(0x6290) - 1)  -- update rivet count
+								mem:write_u8(rivet_pos[i - 0x6291] - 1, 0x10) -- remove rivet from screen (top part)
+								mem:write_u8(rivet_pos[i - 0x6291], 0x10) -- remove rivet from screen (bottom part)
+								if mem:read_u8(0x6290) == 0 then
+									-- P2 has removed the last rivet
+									s2["mode"] = 0x16  -- flag finish up early to ensure P2 gets the points
+								end
+							end
+						end
+					end
+				end
+
+				-- Sync: P1 also finishes
 				if s1["mode"] == 12 and s2["mode"] == 0x16 then
 					mem:write_u8(0x638c, 0)  -- don't award bonus points,  P2 gets the bonus
 					mem:write_u8(0x62b1, 0)  -- don't award bonus points,  P2 gets the bonus
