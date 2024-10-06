@@ -148,7 +148,7 @@ function coopkong.startplugin()
 			status = mem:read_u8(0x6005)		-- game status (1 attract, 2 coins in, 3 playing)
 			mode = mem:read_u8(0x600a)			-- mode
 			frame = scr:frame_number()			-- frame number (~60 fps)
-			--mem:write_u8(0x6227, 4)			-- force a specific stage
+			--mem:write_u8(0x6227, 3)			-- force a specific stage
 			--mem:write_u8(0x6229, 5)           -- force a specific level
 			stage = mem:read_u8(0x6227)			-- active stage (1=barrels, 2=pies, 3=springs, 4=rivets)
 
@@ -425,10 +425,17 @@ function coopkong.startplugin()
 						hitframe = frame
 						s2["enemy_x"] = mem:read_u8(offset + 0x03) - 16
 						s2["enemy_y"] = mem:read_u8(offset + 0x05)
-						-- also clear the sprite
-						mem:write_u8(0x69d0 + (s2["enemy_no"] * 4) + 1, 0x64)
+						-- clear the sprite
+						if s2["enemy_type"] == 0x64 then  -- fires
+							mem:write_u8(0x69d0 + (s2["enemy_no"] * 4) + 1, 0x64)
+						elseif s2["enemy_type"] == 0x67 then  -- barrels
+							mem:write_u8(0x6980 + (s2["enemy_no"] * 4) + 1, 0x64)
+						elseif s2["enemy_type"] == 0x65 then  -- pies
+							mem:write_u8(0x69b8 + (s2["enemy_no"] * 4) + 1, 0x64)
+						end
 					end
 
+					-- remove the enemy from the screen and flag for later cleanup
 					mem:write_u8(offset + 0x03, 0)
 					mem:write_u8(offset + 0x05, 0)
 					if s2["enemy_type"] == 0x64 or s2["enemy_type"] == 0x65 then  -- fires and pies
