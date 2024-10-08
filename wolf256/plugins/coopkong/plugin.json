@@ -2,7 +2,7 @@
 "plugin": {
 "name": "coopkong",
 "description": "DK Bros: 2 Player Co-Op Donkey Kong",
-"version": "0.5",
+"version": "0.6",
 "author": "Jon Wilson (10yard)",
 "type": "plugin",
 "start": "false"

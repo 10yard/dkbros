@@ -8,7 +8,7 @@
     o     o o   o     o     o o   o  o    o o    o ooo 
     oooooo  o    o    oooooo  o    o  oooo   oooo  ooo
 
-PROTOTYPE E by Jon Wilson (10yard)
+PROTOTYPE F by Jon Wilson (10yard)
 
 The arcade version of Donkey Kong adapted for 2 player co-operative gameplay.
 
@@ -34,7 +34,8 @@ Features
 
 - Player 1 gets the barrel control.  
 
-- Pulling rivets is fun with 2 players sharing the task, and it reduces some of the difficulty.
+- Pulling rivets is fun with 2 players sharing the task.  The fireballs spawn in a calculated
+    safe position for both players.
 
 - If one player completes the stage then both players complete the stage together but the player 
     completing the stage gets the bonus points - unless you finish exactly at the same time.

@@ -6,7 +6,7 @@
 #     # #  #      #     # #####  #    #      # ### 
 #     # #   #     #     # #   #  #    # #    # ### 
 ######  #    #    ######  #    #  ####   ####  ###
-PROTOTYPE E by 10yard
+PROTOTYPE F by 10yard
 
 The arcade version of Donkey Kong is adapted for 2 player co-operative gameplay.
 For x64 Windows only. 
@@ -18,7 +18,7 @@ Session 1 (foreground) and session 2 (background) are synchronised with data mer
 ]]
 local exports = {}
 exports.name = "coopkong"
-exports.version = "0.5"
+exports.version = "0.6"
 exports.description = "DK Bros: Multiplayer Co-Op Donkey Kong"
 exports.license = "GNU GPLv3"
 exports.author = { name = "Jon Wilson (10yard)" }
@@ -60,6 +60,7 @@ function coopkong.startplugin()
 	local destroy_seq = {2, 3, 2, 3, 2, 3, 4, 5, 5, 5, 5}
 	local hammer_pos = {{167, 15, 75, 166}, {126, 14, 87, 102}, nil, {127, 6, 167, 103}}
 	local rivet_pos = {0x76cb, 0x752b, 0x76d0, 0x7530, 0x76d5, 0x7535, 0x76da, 0x753a}
+	local spawn_table = {{0xee,0xf0}, {0xdb,0xa0}, {0xe6,0xc8}, {0xd6,0x78}, {0x1b,0xc8}, {0x23,0xa0}, {0x2b,0x78}, {0x12,0xf0}}
 
 	function initialize()
 		--[[
@@ -90,8 +91,8 @@ function coopkong.startplugin()
 			snd = mac.sound
 			vid = mac.video
 			prt = mac.ioport.ports
-			attenuation = snd.attenuation			
-						
+			attenuation = snd.attenuation
+
 			-- Check for other parameters
 			if string.find(parameters, "INVINCIBLE") then invincible = 1 end
 			if string.find(parameters, "SHOW2") then show2 = 1 end
@@ -107,10 +108,14 @@ function coopkong.startplugin()
 			write_data(0x20aa, {0x02, 0x61})									-- Mod: Barrel logic. Roll to lowest player (in 0x6102)
 			write_data(0x2180, {0x02, 0x61})									-- Mod: Barrels logic. Can take ladders until lowest player
 			write_data(0x3364, {0x02, 0x61})									-- Mod: Fires logic. Fires track both players.
-			write_data(0x34c0, {0x03, 0x61})									-- Mod: Fireball spawning logic.  Use average X position.
-			write_data(0x057a, {0xff, 0xff})  									-- Mod: Remove high score to prevent flicker
-
+			write_data(0x057a, {0xff, 0xff})		  							-- Mod: Remove high score to prevent flicker
+			write_data(0x34bf, {0xdd, 0xe5, 0xe1, 0x22, 0x07, 0x61, 0x00, 0x00})-- Mod: Store fireball spawning address (in 0x6107 as 16bit)
 			for i=0x096b, 0x0975 do mem:write_direct_u8(i, 0x00) end			-- Mod: Remove high score table
+
+			-- set default fireball spawning positions on rivets
+			write_data(0x3ac4, {0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff})
+			write_data(0x3ad4, {0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff})
+
 			if invincible == 1 then write_data(0x2813, {0x3e, 0x00, 0x00}) end	-- Mod: Invincible to enemies
 				
 			-- Mod: Mute session 2 music
@@ -148,8 +153,8 @@ function coopkong.startplugin()
 			status = mem:read_u8(0x6005)		-- game status (1 attract, 2 coins in, 3 playing)
 			mode = mem:read_u8(0x600a)			-- mode
 			frame = scr:frame_number()			-- frame number (~60 fps)
-			--mem:write_u8(0x6227, 3)			-- force a specific stage
-			--mem:write_u8(0x6229, 5)           -- force a specific level
+			mem:write_u8(0x6227, 4)				-- force a specific stage
+			--mem:write_u8(0x6229, 5)           	-- force a specific level
 			stage = mem:read_u8(0x6227)			-- active stage (1=barrels, 2=pies, 3=springs, 4=rivets)
 
 			if session == 2 then
@@ -334,8 +339,26 @@ function coopkong.startplugin()
 				-- Store lowest players Y position at 0x6102 for barrel logic mod
 				if s2["y"] > s1["y"] then mem:write_u8(0x6102, s2["y"]) else mem:write_u8(0x6102, s1["y"]) end
 
-				-- Store average X position for fire spawning mod at 0x6103
-				mem:write_u8(0x6103, math.floor((s1["x"] + s2["x"]) / 2))
+				-- detect and reposition spawning fireballs on rivet stage
+				if stage == 4 then
+					local _spawn_addr = mem:read_u16(0x6107)
+					if _spawn_addr > 0x6400 and _spawn_addr <= 0x649f then
+						-- logic to work out the 3 safest spawn positions (from 8) and pick one randomly
+						local _dt = {}  -- distance table
+						for i=1, #spawn_table do
+							local _x = math.min(math.abs(s1["x"] - spawn_table[i][1]), math.abs(s2["x"] - spawn_table[i][1]))
+							local _y = math.min(math.abs(s1["y"] - spawn_table[i][2]), math.abs(s2["y"] - spawn_table[i][2]))
+							table.insert(_dt, {i, _x + _y})
+						end
+						table.sort(_dt, function(lhs, rhs) return lhs[2] < rhs[2] end)
+						local _r = _dt[math.random(6, 8)][1]  -- pick randomly from the safest 3 positions
+						mem:write_u8(_spawn_addr+0x3, spawn_table[_r][1])
+						mem:write_u8(_spawn_addr+0x5, spawn_table[_r][2])
+						mem:write_u8(_spawn_addr+0xe, spawn_table[_r][1])
+						mem:write_u8(_spawn_addr+0xf, spawn_table[_r][2])
+						mem:write_u16(0x6107, 0)  -- clear my spawning flag
+					end
+				end
 
 				-- Show P2 points scored
 				local _points, _oldpoints
@@ -457,11 +480,12 @@ function coopkong.startplugin()
 							-- Has P2 done this rivet?
 							if s2["rivet-"..tostring(i)] == 0 then
 								mem:write_u8(i, 0) -- flag rivet as removed
-								mem:write_u8(0x6290, mem:read_u8(0x6290) - 1)  -- update rivet count
 								mem:write_u8(rivet_pos[i - 0x6291] - 1, 0x10) -- remove rivet from screen (top part)
 								mem:write_u8(rivet_pos[i - 0x6291], 0x10) -- remove rivet from screen (bottom part)
+								mem:write_u8(0x6290, mem:read_u8(0x6290) - 1)  -- update rivet count
 								if mem:read_u8(0x6290) == 0 then
 									-- P2 has removed the last rivet
+									s1["mode"] = 12
 									s2["mode"] = 0x16  -- flag finish up early to ensure P2 gets the points
 								end
 							end
@@ -533,8 +557,8 @@ function coopkong.startplugin()
 	]]
 	
 	function display_title()
-		if frame % 10 == 0 then
-			local i = ({0, 1, 2, 3, 4, 5, 6, 7, 8, 7, 6, 5, 4, 3, 2, 1})[math.floor((frame / 10) % 16) + 1]
+		if frame % 12 == 0 then
+			local i = ({0, 1, 2, 3, 4, 5, 6, 7, 8, 7, 6, 5, 4, 3, 2, 1})[math.floor((frame / 12) % 16) + 1]
 			write_message(0x77ad + i, "                            ")
 			write_message(0x77ae + i, "++  +  +  +++ +++ +++ +++   ")
 			write_message(0x77af + i, "+ + + +   + + + + + + +     ")
@@ -542,7 +566,7 @@ function coopkong.startplugin()
 			write_message(0x77b1 + i, "+ + + +   + + + + + +   + ++")
 			write_message(0x77b2 + i, "++  +  +  +++ + + +++ +++ ++")
 			write_message(0x77b3 + i, "                            ")
-			if frame % 160 < 80 then write_message(0x77bf, "PROTOTYPE E") else write_message(0x77bf, "BY 10YARD  ") end
+			if frame % 192 < 96 then write_message(0x77bf, "PROTOTYPE F") else write_message(0x77bf, "BY 10YARD  ") end
 			if invincible == 1 then write_message(0x7683, "INVINCIBLE") end  -- Invincible mode
 		end
 	end
@@ -599,7 +623,7 @@ function coopkong.startplugin()
 			if _p and _p > 0 then
 				mem:write_u8(start_addr - ((key - 1) * 32), _p - 1 + _adjust)
 			else
-				mem:write_u8(start_addr - ((key - 1) * 32), 0xb0)
+				mem:write_u8(start_addr - ((key - 1) * 32), ({0x4d, 0x4e, 0x4f})[(start_addr % 3) + 1])
 			end
 		end
 	end	
