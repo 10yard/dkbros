@@ -1,12 +1,12 @@
 
 
-    oooooo  o    o    oooooo                           
-    o     o o   o     o     o ooooo   oooo   oooo      
-    o     o o  o      o     o o    o o    o o          
-    o     o ooo       oooooo  o    o o    o  oooo      
-    o     o o  o      o     o ooooo  o    o      o ooo 
-    o     o o   o     o     o o   o  o    o o    o ooo 
-    oooooo  o    o    oooooo  o    o  oooo   oooo  ooo
+    OOOOOO   O    O    OOOOOO
+    O     O  O   O     O     O  OOOOO    OOOO    OOOO
+    O     O  O  O      O     O  O    O  O    O  O
+    O     O  OOO       OOOOOO   O    O  O    O   OOOO
+    O     O  O  O      O     O  OOOOO   O    O       O 
+    O     O  O   O     O     O  O   O   O    O  O    O  OOO
+    OOOOOO   O    O    OOOOOO   O    O   OOOO    OOOO   OOO
 
 PROTOTYPE F by Jon Wilson (10yard)
 

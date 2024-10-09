@@ -1,11 +1,11 @@
 """
-******* *    *    ******
-*     * *   *     *     * *****   ****   ****
-*     * *  *      *     * *    * *    * *
-*     * ***       ******  *    * *    *  ****
-*     * *  *      *     * *****  *    *      * ***
-*     * *   *     *     * *   *  *    * *    * ***
-******  *    *    ******  *    *  ****   ****  ***
+OOOOOO   O    O    OOOOOO
+O     O  O   O     O     O  OOOOO    OOOO    OOOO
+O     O  O  O      O     O  O    O  O    O  O
+O     O  OOO       OOOOOO   O    O  O    O   OOOO
+O     O  O  O      O     O  OOOOO   O    O       O
+O     O  O   O     O     O  O   O   O    O  O    O  OOO
+OOOOOO   O    O    OOOOOO   O    O   OOOO    OOOO   OOO
 2 Player co-op Donkey Kong.
 Prototype F by 10yard
 
@@ -18,6 +18,7 @@ import sys
 import threading
 import subprocess
 import ctypes
+import time
 
 MAME_COMMAND = 'dkmame dkong -plugin coopkong -keyboardprovider rawinput -background_input -volume 0 -skip_gameinfo -throttle -nosleep -autoframeskip'
 DEFAULT_VIDEO = '-video bgfx -bgfx_screen_chains unfiltered'
@@ -71,10 +72,11 @@ if __name__ == "__main__":
             t2.daemon = True
             t2.start()
 
-        if optional_parameters and not window:
-            subprocess.run(f"{MAME_COMMAND} {session1_args}")
-        else:
-            subprocess.run(f"{MAME_COMMAND} {session1_args}", creationflags=subprocess.CREATE_NO_WINDOW)
+        subprocess.run(f"{MAME_COMMAND} {session1_args}")
+        # if optional_parameters and not window:
+        #     subprocess.run(f"{MAME_COMMAND} {session1_args}")
+        # else:
+        #     subprocess.run(f"{MAME_COMMAND} {session1_args}", creationflags=subprocess.CREATE_NO_WINDOW)
 
         # Generate P2 controller configuration file
         # Take P2 controls from session 1 and apply them to P1 of session 2
