@@ -3,11 +3,11 @@ OOOOOO   O    O    OOOOOO
 O     O  O   O     O     O  OOOOO    OOOO    OOOO
 O     O  O  O      O     O  O    O  O    O  O
 O     O  OOO       OOOOOO   O    O  O    O   OOOO
-O     O  O  O      O     O  OOOOO   O    O       O
-O     O  O   O     O     O  O   O   O    O  O    O  OOO
-OOOOOO   O    O    OOOOOO   O    O   OOOO    OOOO   OOO
-2 Player co-op Donkey Kong.
-Prototype F by 10yard
+O     O  O  O      O     O  OOOOO   O    O       O  OO
+OOOOOO   O    O    OOOOOO   O    O   OOOO    OOOO   OO
+
+2 Player co-op Donkey Kong
+Prototype G by 10yard
 
 A wrapper for MAME to simplify launch of the DKBros. plugin and
 to synchronise realtime data across 2 sessions. Session 2 is
@@ -57,7 +57,7 @@ if __name__ == "__main__":
             session1_args += " -debug -window"
 
         if "SYNCINPUT" in optional_parameters:
-            session2_args = session2_args.replace("-cfg_directory config\dkong_p2", f"-cfg_directory config\dkong_p1")
+            session2_args = session2_args.replace("-cfg_directory config/dkong_p2", f"-cfg_directory config/dkong_p1")
 
         if "SHOW2" in optional_parameters:
             session1_args += " -window"

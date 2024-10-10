@@ -12,6 +12,8 @@ rmdir dist /s /Q
 xcopy wolf256 dist\wolf256 /S /i /Y
 rmdir dist\wolf256\cfg /s /Q
 rmdir dist\wolf256\inp /s /Q
+rmdir dist\wolf256\ui /s /Q
+rmdir dist\wolf256\snap /s /Q
 del dist\wolf256\session\*.* /Q
 copy readme.md dist\readme.md /Y
 

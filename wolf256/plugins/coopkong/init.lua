@@ -3,10 +3,10 @@ OOOOOO   O    O    OOOOOO
 O     O  O   O     O     O  OOOOO    OOOO    OOOO
 O     O  O  O      O     O  O    O  O    O  O
 O     O  OOO       OOOOOO   O    O  O    O   OOOO
-O     O  O  O      O     O  OOOOO   O    O       O
-O     O  O   O     O     O  O   O   O    O  O    O  OOO
-OOOOOO   O    O    OOOOOO   O    O   OOOO    OOOO   OOO
-PROTOTYPE F by 10yard
+O     O  O  O      O     O  OOOOO   O    O       O  OO
+OOOOOO   O    O    OOOOOO   O    O   OOOO    OOOO   OO
+2 Player co-op Donkey Kong
+PROTOTYPE G by 10yard
 
 The arcade version of Donkey Kong is adapted for 2 player co-operative gameplay.
 For x64 Windows only. 
@@ -18,17 +18,16 @@ Session 1 (foreground) and session 2 (background) are synchronised - data is mer
 ]]
 local exports = {}
 exports.name = "coopkong"
-exports.version = "0.6"
+exports.version = "0.7"
 exports.description = "DK Bros: Multiplayer Co-Op Donkey Kong"
 exports.license = "GNU GPLv3"
 exports.author = { name = "Jon Wilson (10yard)" }
 local coopkong = exports
 
 function coopkong.startplugin()
-	-- Function variables (they're upvalues)
 	local mac, scr, cpu, mem, snd, vid
 	local parameters, session, invincible, show2, audit
-	local attenuation, frame, cleanup
+	local frame, cleanup
 	local status, mode, stage, combined
 	local address, offset, size
 	local exitframe = 0
@@ -47,13 +46,13 @@ function coopkong.startplugin()
 
 	function initialize()
 		--[[
-		 ###                                                                      
-		  #  #    # # ##### #   ##   #      #  ####    ##   ##### #  ####  #    # 
-		  #  ##   # #   #   #  #  #  #      # #       #  #    #   # #    # ##   # 
-		  #  # #  # #   #   # #    # #      #  ####  #    #   #   # #    # # #  # 
-		  #  #  # # #   #   # ###### #      #      # ######   #   # #    # #  # # 
-		  #  #   ## #   #   # #    # #      # #    # #    #   #   # #    # #   ## 
-		 ### #    # #   #   # #    # ###### #  ####  #    #   #   #  ####  #    # 
+		 ###
+		  #  #    # # ##### #   ##   #      #  ####    ##   ##### #  ####  #    #
+		  #  ##   # #   #   #  #  #  #      # #       #  #    #   # #    # ##   #
+		  #  # #  # #   #   # #    # #      #  ####  #    #   #   # #    # # #  #
+		  #  #  # # #   #   # ###### #      #      # ######   #   # #    # #  # #
+		  #  #   ## #   #   # #    # #      # #    # #    #   #   # #    # #   ##
+		 ### #    # #   #   # #    # ###### #  ####  #    #   #   #  ####  #    #
 		]]
 		if emu.romname() == "dkong" and tonumber(emu.app_version()) >= 0.256 then
 			mac = manager.machine
@@ -73,7 +72,7 @@ function coopkong.startplugin()
 			mem = cpu.spaces["program"]
 			snd = mac.sound
 			vid = mac.video
-			attenuation = snd.attenuation
+			att = snd.attenuation
 
 			-- Check for other parameters
 			if string.find(parameters, "INVINCIBLE") then invincible = 1 end
@@ -93,6 +92,8 @@ function coopkong.startplugin()
 			write_data(0x057a, {0xff, 0xff})		  							-- Mod: Remove high score to prevent flicker
 			write_data(0x34bf, {0xdd, 0xe5, 0xe1, 0x22, 0x07, 0x61, 0x00, 0x00})-- Mod: Store fireball spawning address (in 0x6107 as 16bit)
 			for i=0x096b, 0x0975 do mem:write_direct_u8(i, 0x00) end			-- Mod: Remove high score table
+			write_data(0x08de, {0x00, 0x00, 0x00})							    -- Mod: 1 credit is enough for 1 or 2 player start
+			write_data(0x0902, {0xca, 0x06, 0x09})							    -- Mod: 2P start button does same as 1P start button
 
 			-- set default fireball spawning positions on rivets
 			write_data(0x3ac4, {0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff})
@@ -109,7 +110,7 @@ function coopkong.startplugin()
 				write_data(0x1243, {0x19})  -- all other stages
 
 				-- Adjusted hammer positions for session 2 (x+5, y-1)
-				write_data(0x3e0c, {0x29, 0x63, 0xc0, 0xbf, 0x28, 0x8c, 0x80, 0xb3, 0x20, 0x8b, 0x81, 0x63})
+				write_data(0x3e0c, {0x25, 0x63, 0xbc, 0xbf, 0x24, 0x8c, 0x7c, 0xb3, 0x1c, 0x8b, 0x7d, 0x63})
 			end
 
 			-- open random access session files for data exchange
@@ -127,13 +128,13 @@ function coopkong.startplugin()
 	function main()
 		if cpu ~= nil then
 			--[[
-			  #####                                                                                        
-			 #     # #   # #    #  ####  #    # #####   ####  #    # #  ####    ##   ##### #  ####  #    # 
-			 #        # #  ##   # #    # #    # #    # #    # ##   # # #       #  #    #   # #    # ##   # 
-			  #####    #   # #  # #      ###### #    # #    # # #  # #  ####  #    #   #   # #    # # #  # 
-				   #   #   #  # # #      #    # #####  #    # #  # # #      # ######   #   # #    # #  # # 
-			 #     #   #   #   ## #    # #    # #   #  #    # #   ## # #    # #    #   #   # #    # #   ## 
-			  #####    #   #    #  ####  #    # #    #  ####  #    # #  ####  #    #   #   #  ####  #    # 
+			  #####
+			 #     # #   # #    #  ####  #    # #####   ####  #    # #  ####    ##   ##### #  ####  #    #
+			 #        # #  ##   # #    # #    # #    # #    # ##   # # #       #  #    #   # #    # ##   #
+			  #####    #   # #  # #      ###### #    # #    # # #  # #  ####  #    #   #   # #    # # #  #
+				   #   #   #  # # #      #    # #####  #    # #  # # #      # ######   #   # #    # #  # #
+			 #     #   #   #   ## #    # #    # #   #  #    # #   ## # #    # #    #   #   # #    # #   ##
+			  #####    #   #    #  ####  #    # #    #  ####  #    # #  ####  #    #   #   #  ####  #    #
 			]]
 			mem:write_u8(0x600f, 0)				-- disable the default turn based 2 player game
 			mem:write_u8(0x622d, 1)				-- disable extra life at 7000
@@ -168,6 +169,7 @@ function coopkong.startplugin()
 				s1["x"] = tonumber(f1:read("*line"))     		-- x position
 				s1["y"] = tonumber(f1:read("*line"))     		-- y position
 				s1["enemy_hit"] = tonumber(f1:read("*line"))	-- enemy hit
+				for i=0x74e6, 0x7486, -0x20 do mem:write_u8(i, f1:read("*line")) end	-- on screen timer
 				for i=0x6a0c, 0x6a14, 4 do s1["item-"..tostring(i)] = tonumber(f1:read("*line")) end  -- bonus items
 				for i=0x6400, 0x649f do mem:write_u8(i, f1:read("*line")) end	-- fires
 				for i=0x6500, 0x65ff do mem:write_u8(i, f1:read("*line")) end	-- bouncers and pies
@@ -200,11 +202,12 @@ function coopkong.startplugin()
 					emu.pause()
 				else
 					emu.unpause()
-					snd.attenuation = attenuation
+					snd.attenuation = att
 				end
 
 				-- mute music and non-gameplay sounds from session 2
-				if s2["mode"] ~= 12 then snd.attenuation = -32 else snd.attenuation = attenuation end
+				if s2["mode"] ~= 12 then snd.attenuation = -32 else snd.attenuation = att
+				end
 
 				-- Remove bonus items collected by P1
 				if s1["mode"] == 12 and stage > 1 then
@@ -309,7 +312,7 @@ function coopkong.startplugin()
 					snd.attenuation = -32
 					vid.throttle_rate = 0.05
 				else
-					snd.attenuation = attenuation
+					snd.attenuation = att
 					vid.throttle_rate = 1
 					if pa1 then pa1:write(performance_stats()) end
 				end
@@ -356,16 +359,22 @@ function coopkong.startplugin()
 
 				-- Take unused sprite from session 1 for player 2 Jumpman.
 				if s1["mode"] > 11 and s1["mode"] < 16 then
-					mem:write_u8(0x6930, s2["x"])
-					mem:write_u8(0x6931, s2["sprite"])
-					mem:write_u8(0x6932, 12)  -- Set Jumpman colour to blue
-					mem:write_u8(0x6933, s2["y"])
+					mem:write_u8(0x6a70, s2["x"])
+					mem:write_u8(0x6a71, s2["sprite"])
+					mem:write_u8(0x6a72, 12)  -- Set Jumpman colour to blue
+					mem:write_u8(0x6a73, s2["y"])
 				end
 
-				-- Update fire sprite to alternative blue colour when P2 is smashing.
+				-- Update fire sprite colour when P2 is smashing.
 				if s1["mode"] == 12 and s2["mode"] == 12 and s2["hammer_active"] == 1 then
-					for i=0x69d0, 0x69ef, 0x04 do mem:write_u8(i+2, 12) end
+					for i=0x69d0, 0x69ef, 0x04 do mem:write_u8(i+2, 0) end
 				end
+
+				-- clear any smash sprite remnants
+				if s2["enemy_hit"] == 0 and olds2 and olds2["enemy_hit"] == 1 then mem:write_u8(0x6a2d, 0x64) end
+
+				-- Adjust score sprite colour for P2
+				if s1["mode"] == 12 then mem:write_u8(0x6942, 9) end
 
 				-- Adjust hammer sprite colour for P2 and only display when session 1 is ready
 				if s1["mode"] >= 11 then
@@ -430,6 +439,16 @@ function coopkong.startplugin()
 						sync_rivets(s2, true)	-- cleanup rivets after stage completion
 					end
 				end
+				if stage == 4 and s1["mode"] == 22 then
+					-- Move P1 to top
+					mem:write_u8(0x694c, 66)  -- x
+					mem:write_u8(0x694d, 128) -- right facing
+					mem:write_u8(0x694f, 80)  -- y
+					-- Move P2 to top
+					mem:write_u8(0x6a70, 188) -- x
+					mem:write_u8(0x6a71, 0)   -- left facing
+					mem:write_u8(0x6a73, 80)  -- y
+				end
 
 				-- Force delay when player 2 is smashing an enemy
 				if s1["mode"] == 12 then
@@ -438,7 +457,7 @@ function coopkong.startplugin()
 						mem:write_u8(0x6345, 1)  --"--
 						snd.attenuation = -32
 					else
-						snd.attenuation = attenuation
+						snd.attenuation = att
 						if olds2 and olds2["enemy_hit"] == 1 then
 							mem:write_u8(0x6350, 0)
 							mem:write_u8(0x6345, 0)
@@ -447,9 +466,11 @@ function coopkong.startplugin()
 				end
 
 				-- Display combined score inplace of high score
-				combined = string.format("%07d", tonumber(read_score(0x7781, 6)) + tonumber(read_score(0x7521, 6)))
-				if #combined == 7 then
-					write_message(0x7661, combined, 0x70)
+				if s1["mode"] > 0 then
+					combined = string.format("%07d", tonumber(read_score(0x7781, 6)) + tonumber(read_score(0x7521, 6)))
+					if #combined == 7 then
+						write_message(0x7661, combined, 0x70)
+					end
 				end
 
 				-- Store session 1 info --------------------------------------------------------------------------------
@@ -460,13 +481,14 @@ function coopkong.startplugin()
 				f1:write(mem:read_u8(0x6203).."\n")  -- x position
 				f1:write(mem:read_u8(0x6205).."\n")  -- y position
 				f1:write(mem:read_u8(0x6350).."\n")  -- enemy hit a
-				for i=0x6a0c, 0x6a14, 4 do f1:write(mem:read_u8(i).."\n") end	-- bonus items
-				for i=0x6400, 0x649f do f1:write(mem:read_u8(i).."\n") end		-- fires
-				for i=0x6500, 0x65ff do f1:write(mem:read_u8(i).."\n") end		-- bouncers and pies
-				for i=0x6700, 0x683f do f1:write(mem:read_u8(i).."\n") end		-- barrels (x10)
-				for i=0x6280, 0x628f do f1:write(mem:read_u8(i).."\n") end		-- retractable ladders
-				for i=0x62a0, 0x62a6 do f1:write(mem:read_u8(i).."\n") end		-- conveyors
-				for i=0x6292, 0x6299 do f1:write(mem:read_u8(i).."\n") end  	-- rivets
+				for i=0x74e6, 0x7486, -0x20 do f1:write(mem:read_u8(i).."\n") end	-- on screen timer
+				for i=0x6a0c, 0x6a14, 4 do f1:write(mem:read_u8(i).."\n") end		-- bonus items
+				for i=0x6400, 0x649f do f1:write(mem:read_u8(i).."\n") end			-- fires
+				for i=0x6500, 0x65ff do f1:write(mem:read_u8(i).."\n") end			-- bouncers and pies
+				for i=0x6700, 0x683f do f1:write(mem:read_u8(i).."\n") end			-- barrels (x10)
+				for i=0x6280, 0x628f do f1:write(mem:read_u8(i).."\n") end			-- retractable ladders
+				for i=0x62a0, 0x62a6 do f1:write(mem:read_u8(i).."\n") end			-- conveyors
+				for i=0x6292, 0x6299 do f1:write(mem:read_u8(i).."\n") end  		-- rivets
 				if stage == 3 then
 					for i=0x6600, 0x665f do f1:write(mem:read_u8(i).."\n") end		-- elevators (x6)
 				end
@@ -497,7 +519,7 @@ function coopkong.startplugin()
 			write_message(0x77b1 + i, " + + + +  + + + + + +   +   ")
 			write_message(0x77b2 + i, " ++  + +  +++ + + +++ +++ + ")
 			write_message(0x77b3 + i, "                            ")
-			if frame % 192 < 96 then write_message(0x77bf, " PROTOTYPE F") else write_message(0x77bf, " BY 10YARD  ") end
+			if frame % 192 < 96 then write_message(0x77bf, " PROTOTYPE G") else write_message(0x77bf, " BY 10YARD  ") end
 			if invincible == 1 then write_message(0x7683, "INVINCIBLE") end  -- Invincible mode
 		end
 	end
