@@ -12,9 +12,9 @@ The arcade version of Donkey Kong is adapted for 2 player co-operative gameplay.
 For x64 Windows only. 
 
 1P and 2P controls are configured in MAME UI under "Input Settings > Input Assignments (this system)"
-You must exit and restart the game after making control changes.  Changes are then applied to P2 sessions.
+You must exit and restart the game after making control changes.  Changes are then applied to P2 session.
 
-Session 1 (foreground) and session 2 (background) are synchronised with data merged into session 1.
+Session 1 (foreground) and session 2 (background) are synchronised - data is merged into session 1.
 ]]
 local exports = {}
 exports.name = "coopkong"

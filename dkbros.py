@@ -72,11 +72,13 @@ if __name__ == "__main__":
             t2.daemon = True
             t2.start()
 
-        subprocess.run(f"{MAME_COMMAND} {session1_args}")
+        # Issues with keybaard blocking when CREATE_NO_WINDOW used with fullscreen.  Removed code block for now.
         # if optional_parameters and not window:
         #     subprocess.run(f"{MAME_COMMAND} {session1_args}")
         # else:
         #     subprocess.run(f"{MAME_COMMAND} {session1_args}", creationflags=subprocess.CREATE_NO_WINDOW)
+
+        subprocess.run(f"{MAME_COMMAND} {session1_args}")
 
         # Generate P2 controller configuration file
         # Take P2 controls from session 1 and apply them to P1 of session 2

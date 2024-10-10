@@ -1,21 +1,14 @@
+![DK Bros. Marquee](https://i.imgur.com/RQsTYYQ.png)
+
+The arcade version of Donkey Kong is adapted for 2 player co-operative gameplay.
+
+DKBros. includes a program wrapper and a LUA plugin for MAME v0.256.    
+
+Development by Jon Wilson (10yard)
 
 
-    OOOOOO   O    O    OOOOOO
-    O     O  O   O     O     O  OOOOO    OOOO    OOOO
-    O     O  O  O      O     O  O    O  O    O  O
-    O     O  OOO       OOOOOO   O    O  O    O   OOOO
-    O     O  O  O      O     O  OOOOO   O    O       O 
-    O     O  O   O     O     O  O   O   O    O  O    O  OOO
-    OOOOOO   O    O    OOOOOO   O    O   OOOO    OOOO   OOO
+## How to Play
 
-PROTOTYPE F by Jon Wilson (10yard)
-
-The arcade version of Donkey Kong adapted for 2 player co-operative gameplay.
-
-DKBros. includes a program wrapper and a LUA plugin for MAME.    
-
-How to Play
------------
 Extract the contents of the dkbros_prototype zip file.  It includes everything you need apart from the `dkong.zip` rom file.
 
 Place your `dkong.zip` into the wolf256\roms folder.
@@ -25,8 +18,7 @@ Run the `dkbros.exe` program.  This will set up a 2 player co-op Donkey Kong ses
 Press the start button to play or see below for notes on configuring the controls.
 
 
-Features
---------
+## Features
 
 - 2 players are controlled independently in the same game.
 
@@ -47,8 +39,7 @@ Features
 - There are 7 lives shared between both players.
 
 
-Default Controls
-----------------
+## Default Controls
 The default player controls are mapped to one keyboard as follows.
 
 ### Player 1
@@ -68,8 +59,7 @@ The default player controls are mapped to one keyboard as follows.
 Controls can be customised as per regular MAME including using joysticks.
 
 
-Steps to Configure Controls
----------------------------
+## Steps to Configure Controls
 1. Run dkbros.exe and press the TAB key to open the settings menu
 2. Select "Input Settings"
 3. Select "Input Assignments (this system)"
@@ -80,8 +70,8 @@ Steps to Configure Controls
 **IMPORTANT:**  Please be sure to map every input for P1 and P2.
 
 
-Parameters
-----------
+## Parameters
+
 You can launch the game in windowed mode by providing the parameter "WINDOW"
 i.e. dkbros WINDOW
 
@@ -89,19 +79,18 @@ To assist testing there is an invincible mode.
 i.e. dkbros INVINCIBLE
 
 
-Thanks to
----------
+## Thanks to
+
 The Donkey Kong rom hacking resource - https://github.com/furrykef/dkdasm
+
+Mr2Nut123 for his ideas, assistance with testing and marquee design - https://www.twitch.tv/mr2nut123
+
+Paul Goes for his assistance with testing - https://donkeykonghacks.net/
 
 The MAMEdev team - https://docs.mamedev.org/
 
 WolfMAME by Mahlemiut - https://github.com/mahlemiut/wolfmame
 
-Mr2Nut123 for his ideas and assistance with testing - https://www.twitch.tv/mr2nut123
+## Feedback
 
-Paul Goes for his assistance with testing - https://donkeykonghacks.net/
-
-
-Feedback
---------
 Please send feedback to jon123wilson@hotmail.com
