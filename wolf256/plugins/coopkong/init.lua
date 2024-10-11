@@ -6,7 +6,7 @@ O     O  OOO       OOOOOO   O    O  O    O   OOOO
 O     O  O  O      O     O  OOOOO   O    O       O  OO
 OOOOOO   O    O    OOOOOO   O    O   OOOO    OOOO   OO
 2 Player co-op Donkey Kong
-PROTOTYPE G by 10yard
+PROTOTYPE H by 10yard
 
 The arcade version of Donkey Kong is adapted for 2 player co-operative gameplay.
 For x64 Windows only. 
@@ -18,7 +18,7 @@ Session 1 (foreground) and session 2 (background) are synchronised - data is mer
 ]]
 local exports = {}
 exports.name = "coopkong"
-exports.version = "0.7"
+exports.version = "0.8"
 exports.description = "DK Bros: Multiplayer Co-Op Donkey Kong"
 exports.license = "GNU GPLv3"
 exports.author = { name = "Jon Wilson (10yard)" }
@@ -109,7 +109,7 @@ function coopkong.startplugin()
 				write_data(0x1249, {0x42})  -- pies
 				write_data(0x1243, {0x19})  -- all other stages
 
-				-- Adjusted hammer positions for session 2 (x+5, y-1)
+				-- Adjusted hammer positions for session 2 (x+1, y-1)
 				write_data(0x3e0c, {0x25, 0x63, 0xbc, 0xbf, 0x24, 0x8c, 0x7c, 0xb3, 0x1c, 0x8b, 0x7d, 0x63})
 			end
 
@@ -143,7 +143,7 @@ function coopkong.startplugin()
 			status = mem:read_u8(0x6005)		-- game status (1 attract, 2 coins in, 3 playing)
 			mode = mem:read_u8(0x600a)			-- mode
 			frame = scr:frame_number()			-- frame number (~60 fps)
-			--mem:write_u8(0x6227, 4)				-- force a specific stage
+			--mem:write_u8(0x6227, 2)				-- force a specific stage
 			--mem:write_u8(0x6229, 5)           	-- force a specific level
 			stage = mem:read_u8(0x6227)			-- active stage (1=barrels, 2=pies, 3=springs, 4=rivets)
 
@@ -206,8 +206,7 @@ function coopkong.startplugin()
 				end
 
 				-- mute music and non-gameplay sounds from session 2
-				if s2["mode"] ~= 12 then snd.attenuation = -32 else snd.attenuation = att
-				end
+				if s2["mode"] ~= 12 then snd.attenuation = -32 else snd.attenuation = att end
 
 				-- Remove bonus items collected by P1
 				if s1["mode"] == 12 and stage > 1 then
@@ -332,7 +331,7 @@ function coopkong.startplugin()
 				-- detect and reposition spawning fireballs on rivet stage
 				if stage == 4 then
 					local _spawn_addr = mem:read_u16(0x6107)
-					if _spawn_addr > 0x6400 and _spawn_addr <= 0x649f then
+					if _spawn_addr >= 0x6400 and _spawn_addr <= 0x649f then
 						-- logic to work out the 3 safest spawn positions (from 8) and pick one randomly
 						local _dt = {}  -- distance table
 						for i=1, #spawn_table do
@@ -519,7 +518,7 @@ function coopkong.startplugin()
 			write_message(0x77b1 + i, " + + + +  + + + + + +   +   ")
 			write_message(0x77b2 + i, " ++  + +  +++ + + +++ +++ + ")
 			write_message(0x77b3 + i, "                            ")
-			if frame % 192 < 96 then write_message(0x77bf, " PROTOTYPE G") else write_message(0x77bf, " BY 10YARD  ") end
+			if frame % 192 < 96 then write_message(0x77bf, " PROTOTYPE H") else write_message(0x77bf, " BY 10YARD  ") end
 			if invincible == 1 then write_message(0x7683, "INVINCIBLE") end  -- Invincible mode
 		end
 	end

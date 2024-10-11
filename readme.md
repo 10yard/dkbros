@@ -2,14 +2,14 @@
 
 The arcade version of Donkey Kong is adapted for 2 player co-operative gameplay.
 
-DKBros. includes a program wrapper and a LUA plugin for MAME v0.256.    
+DKBros. includes a program wrapper and a LUA plugin with MAME v0.256 all bundled in a convenient ready to play package.    
 
 Development by Jon Wilson (10yard)
 
 
 ## How to Play
 
-Extract the contents of the dkbros_prototype zip file.  It includes everything you need apart from the `dkong.zip` rom file.
+Extract the contents of the dkbros_prototype zip file into a folder.  It includes everything you need apart from the `dkong.zip` rom file.
 
 Place your `dkong.zip` into the wolf256\roms folder.
 
@@ -67,7 +67,7 @@ Controls can be customised as per regular MAME including using joysticks.
 5. Close the settings menu
 6. Exit and restart dkbros game to apply changes for both players
 
-**IMPORTANT:**  Please be sure to map every input for P1 and P2.
+Please be sure to map every input for P1 and P2.
 
 
 ## Parameters
