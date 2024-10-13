@@ -6,7 +6,7 @@ O     O  OOO       OOOOOO   O    O  O    O   OOOO
 O     O  O  O      O     O  OOOOO   O    O       O  OO
 OOOOOO   O    O    OOOOOO   O    O   OOOO    OOOO   OO
 2 Player co-op Donkey Kong
-PROTOTYPE H by 10yard
+PROTOTYPE I by 10yard
 
 The arcade version of Donkey Kong is adapted for 2 player co-operative gameplay.
 For x64 Windows only. 
@@ -18,7 +18,7 @@ Session 1 (foreground) and session 2 (background) are synchronised - data is mer
 ]]
 local exports = {}
 exports.name = "coopkong"
-exports.version = "0.8"
+exports.version = "0.9"
 exports.description = "DK Bros: Multiplayer Co-Op Donkey Kong"
 exports.license = "GNU GPLv3"
 exports.author = { name = "Jon Wilson (10yard)" }
@@ -339,7 +339,7 @@ function coopkong.startplugin()
 					steer_sprite = 0x64
 				end
 
-                if stage == 1 and s1["mode"] == 12 then
+                if stage == 1 and s1["mode"] >= 12 then
                     -- Store lowest players Y position at 0x6102 for barrel logic mod
                     if s2["y"] > s1["y"] then mem:write_u8(0x6102, s2["y"]) else mem:write_u8(0x6102, s1["y"]) end
 
@@ -361,6 +361,8 @@ function coopkong.startplugin()
 						write_data(0x6a74, {36, steer_sprite, 11, 4})-- display P1 steering indicator
                     end
                 end
+
+				if stage == 1 and s1["mode"] < 12 then active_steerer = 1 end  -- set active steerer back to 1
 
 				-- detect and reposition spawning fireballs on rivet stage
 				if stage == 4 and s1["mode"] == 12 then
@@ -552,7 +554,7 @@ function coopkong.startplugin()
 			write_message(0x77b1 + i, " + + + +  + + + + + +   +   ")
 			write_message(0x77b2 + i, " ++  + +  +++ + + +++ +++ + ")
 			write_message(0x77b3 + i, "                            ")
-			if frame % 192 < 96 then write_message(0x77bf, " PROTOTYPE H") else write_message(0x77bf, " BY 10YARD  ") end
+			if frame % 192 < 96 then write_message(0x77bf, " PROTOTYPE I") else write_message(0x77bf, " BY 10YARD  ") end
 			if invincible == 1 then write_message(0x7683, "INVINCIBLE") end  -- Invincible mode
 		end
 	end

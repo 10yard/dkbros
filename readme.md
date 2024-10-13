@@ -26,7 +26,7 @@ Refer to notes below for configuring the controls.
 
 - Each player gets their own hammers, and they can be smashed together
 
-- The last player to grab a hammer gets the barrel control and retains control until the other player grabs a hammer.  The barrels change colour when P2 has the steering. 
+- The last player to take a hammer gets barrel control and retains control until the other player takes a hammer.  The barrels change colour when P2 has the steering. 
 
 - Pulling rivets is fun with 2 players sharing the task.  The fireballs spawn in a calculated safe position for both players.
 

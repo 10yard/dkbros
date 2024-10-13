@@ -7,7 +7,7 @@ O     O  O  O      O     O  OOOOO   O    O       O  OO
 OOOOOO   O    O    OOOOOO   O    O   OOOO    OOOO   OO
 
 2 Player co-op Donkey Kong
-Prototype H by 10yard
+Prototype I by 10yard
 
 A wrapper for MAME to simplify launch of the DKBros plugin and to synchronise realtime data across 2 sessions.
 Session 2 is hidden from view.
