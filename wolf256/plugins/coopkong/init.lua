@@ -31,18 +31,19 @@ function coopkong.startplugin()
 	local status, mode, stage, combined
 	local address, offset, size
 	local exitframe = 0
+    local active_steerer, steer_sprite = 1, 0x62
 
 	local s1, s2, olds1, olds2 = {}, {}, {}, {}  -- session data
 	local characters = "0123456789       ABCDEFGHIJKLMNOPQRSTUVWXYZ@-"
 	local rivet_pos = {0x76cb, 0x752b, 0x76d0, 0x7530, 0x76d5, 0x7535, 0x76da, 0x753a}
 	local spawn_table = {{0xee,0xf0}, {0xdb,0xa0}, {0xe6,0xc8}, {0xd6,0x78}, {0x1b,0xc8}, {0x23,0xa0}, {0x2b,0x78}, {0x12,0xf0}}
-	local palette = {0xfffefcff, 0xff000000, 0xfff4ba15}
+	local palette = {0xfffefcff, 0xffffffff, 0xfff4ba15}
 	local graphics = {
-		"           1    ",
-		"           11   ",
-		"  1111111111111 ",
-		"           11   ",
-		"           1    "}
+		"           1    222  222  222  222  222  222  2  2  2222        ",
+		"           11   2     2   2    2    2 2   2   22 2  2           ",
+		"  1111111111111 222   2   222  222  22    2   2 22  2 22        ",
+		"           11     2   2   2    2    2 2   2   2  2  2  2        ",
+		"           1    222   2   222  222  2 2  222  2  2  2222        "}
 
 	function initialize()
 		--[[
@@ -95,7 +96,11 @@ function coopkong.startplugin()
 			write_data(0x08de, {0x00, 0x00, 0x00})							    -- Mod: 1 credit is enough for 1 or 2 player start
 			write_data(0x0902, {0xca, 0x06, 0x09})							    -- Mod: 2P start button does same as 1P start button
 
-			-- set default fireball spawning positions on rivets
+            -- Mod: Steering can switch between P1 and P2 based on content of 0x6103 (X pos) and 0x6104 (Input State)
+            write_data(0x2198, {0x03, 0x61})
+            write_data(0x2195, {0x04, 0x61})
+
+			-- Mod: set default fireball spawning positions on rivets
 			write_data(0x3ac4, {0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff})
 			write_data(0x3ad4, {0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff})
 
@@ -144,7 +149,7 @@ function coopkong.startplugin()
 			mode = mem:read_u8(0x600a)			-- mode
 			frame = scr:frame_number()			-- frame number (~60 fps)
 			--mem:write_u8(0x6227, 2)				-- force a specific stage
-			--mem:write_u8(0x6229, 5)           	-- force a specific level
+			mem:write_u8(0x6229, 5)           	-- force a specific level
 			stage = mem:read_u8(0x6227)			-- active stage (1=barrels, 2=pies, 3=springs, 4=rivets)
 
 			if session == 2 then
@@ -241,6 +246,7 @@ function coopkong.startplugin()
 				f2:write(mem:read_u8(0x6200).."\n")  -- alive status
 				f2:write(mem:read_u8(0x6203).."\n")  -- x pos
 				f2:write(mem:read_u8(0x6205).."\n")  -- y pos
+				f2:write(mem:read_u8(0x6010).."\n")  -- input state
 				f2:write(mem:read_u8(0x694d).."\n")  -- sprite value
 				f2:write(mem:read_u8(0x6217).."\n")  -- hammer active
 				f2:write(mem:read_u8(0x6350).."\n")  -- enemy hit
@@ -279,6 +285,7 @@ function coopkong.startplugin()
 				s1["mode"] = mode
 				s1["x"] = mem:read_u8(0x6203)
 				s1["y"] = mem:read_u8(0x6205)
+				s1["hammer_active"] = mem:read_u8(0x6217)
 
 				-- Retrieve session 2 info --------------------------------------------------------------------------------
 				f2:seek("set")  -- set cursor to start of file
@@ -286,6 +293,7 @@ function coopkong.startplugin()
 				s2["alive"] = tonumber(f2:read("*line"))          -- alive status
 				s2["x"] = tonumber(f2:read("*line"))              -- x position
 				s2["y"] = tonumber(f2:read("*line"))              -- y position
+				s2["input_state"] = tonumber(f2:read("*line"))    -- input_state
 				s2["sprite"] = tonumber(f2:read("*line"))         -- sprite value
 				s2["hammer_active"] = tonumber(f2:read("*line"))  -- hammer active
 				s2["enemy_hit"] = tonumber(f2:read("*line"))      -- enemy hit
@@ -323,13 +331,39 @@ function coopkong.startplugin()
 				end
 
 				-- Flashing 2UP in time with 1UP
-				if mem:read_u8(0x7740) ~= 0x10 then write_message(0x74e0, "2UP") else write_message(0x74e0, "   ") end
+				if mem:read_u8(0x7740) ~= 0x10 then
+					steer_sprite = 0x62
+					write_message(0x74e0, "2UP")
+				else
+					write_message(0x74e0, "   ")
+					steer_sprite = 0x64
+				end
 
-				-- Store lowest players Y position at 0x6102 for barrel logic mod
-				if s2["y"] > s1["y"] then mem:write_u8(0x6102, s2["y"]) else mem:write_u8(0x6102, s1["y"]) end
+                if stage == 1 and s1["mode"] == 12 then
+                    -- Store lowest players Y position at 0x6102 for barrel logic mod
+                    if s2["y"] > s1["y"] then mem:write_u8(0x6102, s2["y"]) else mem:write_u8(0x6102, s1["y"]) end
+
+					-- Determine the active barrel steerer for barrel steering mod
+                    if olds1 and olds1["hammer_active"] == 0 and s1["hammer_active"] == 1 then active_steerer = 1 end
+                    if olds2 and olds2["hammer_active"] == 0 and s2["hammer_active"] == 1 then active_steerer = 2 end
+                    -- Store the X position of the active barrel steerer and input state
+                    if active_steerer == 2 then
+						mem:write_u8(0x6103, s2["x"])
+                        mem:write_u8(0x6104, s2["input_state"])
+                        for i=0x6980, 0x69a4, 4 do -- update barrel colour for P2 steering
+							local _t = mem:read_u8(i+1)
+							if _t % 128 >= 25 and _t % 128 <=27 then mem:write_u8(i+2, 10) else mem:write_u8(i+2, 7) end
+                        end
+						write_data(0x6a74, {187, steer_sprite, 7, 4})-- display P2 steering indicator
+                    else
+                        mem:write_u8(0x6103, s1["x"])
+                        mem:write_u8(0x6104, mem:read_u8(0x6010))
+						write_data(0x6a74, {36, steer_sprite, 11, 4})-- display P1 steering indicator
+                    end
+                end
 
 				-- detect and reposition spawning fireballs on rivet stage
-				if stage == 4 then
+				if stage == 4 and s1["mode"] == 12 then
 					local _spawn_addr = mem:read_u16(0x6107)
 					if _spawn_addr >= 0x6400 and _spawn_addr <= 0x649f then
 						-- logic to work out the 3 safest spawn positions (from 8) and pick one randomly
@@ -636,7 +670,7 @@ function coopkong.startplugin()
 		f2:close()
 		if pa1 then	pa1:close() end
 		if pa2 then	pa2:close() end
-	end)
+    end)
 	
 	emu.register_frame_done(main, "frame")
 end

@@ -9,16 +9,14 @@ OOOOOO   O    O    OOOOOO   O    O   OOOO    OOOO   OO
 2 Player co-op Donkey Kong
 Prototype H by 10yard
 
-A wrapper for MAME to simplify launch of the DKBros. plugin and
-to synchronise realtime data across 2 sessions. Session 2 is
-hidden from view.
+A wrapper for MAME to simplify launch of the DKBros plugin and to synchronise realtime data across 2 sessions.
+Session 2 is hidden from view.
 """
 import os
 import sys
 import threading
 import subprocess
 import ctypes
-import time
 
 MAME_COMMAND = 'dkmame dkong -plugin coopkong -keyboardprovider rawinput -background_input -volume 0 -skip_gameinfo -throttle -nosleep -autoframeskip'
 DEFAULT_VIDEO = '-video bgfx -bgfx_screen_chains unfiltered'
@@ -33,7 +31,7 @@ def cleanup_mame():
 if __name__ == "__main__":
     cleanup_mame()
 
-    # Are there optional parameters i.e. "WINDOW", "INVINCIBLE", "SHOW2" or "INVINCIBLE SHOW2"
+    # Are there optional parameters e.g. "WINDOW", "INVINCIBLE", "SHOW2" or "INVINCIBLE WINDOW"
     optional_parameters = ""
     if len(sys.argv) > 1:
         optional_parameters = sys.argv[1].upper().strip()
@@ -72,7 +70,7 @@ if __name__ == "__main__":
             t2.daemon = True
             t2.start()
 
-        # Issues with keybaard blocking when CREATE_NO_WINDOW used with fullscreen.  Removed code block for now.
+        # Issues with keyboard blocking when CREATE_NO_WINDOW used with fullscreen.  Removed code block for now.
         # if optional_parameters and not window:
         #     subprocess.run(f"{MAME_COMMAND} {session1_args}")
         # else:
