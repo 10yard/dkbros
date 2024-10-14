@@ -148,8 +148,8 @@ function coopkong.startplugin()
 			status = mem:read_u8(0x6005)		-- game status (1 attract, 2 coins in, 3 playing)
 			mode = mem:read_u8(0x600a)			-- mode
 			frame = scr:frame_number()			-- frame number (~60 fps)
-			--mem:write_u8(0x6227, 2)				-- force a specific stage
-			mem:write_u8(0x6229, 5)           	-- force a specific level
+			--mem:write_u8(0x6227, 2)			-- force a specific stage
+			--mem:write_u8(0x6229, 5)           -- force a specific level
 			stage = mem:read_u8(0x6227)			-- active stage (1=barrels, 2=pies, 3=springs, 4=rivets)
 
 			if session == 2 then
@@ -354,11 +354,11 @@ function coopkong.startplugin()
 							local _t = mem:read_u8(i+1)
 							if _t % 128 >= 25 and _t % 128 <=27 then mem:write_u8(i+2, 10) else mem:write_u8(i+2, 7) end
                         end
-						write_data(0x6a74, {187, steer_sprite, 7, 4})-- display P2 steering indicator
+						write_data(0x6a74, {220, steer_sprite, 7, 4})-- display P2 steering indicator
                     else
                         mem:write_u8(0x6103, s1["x"])
                         mem:write_u8(0x6104, mem:read_u8(0x6010))
-						write_data(0x6a74, {36, steer_sprite, 11, 4})-- display P1 steering indicator
+						write_data(0x6a74, {68, steer_sprite, 11, 4})-- display P1 steering indicator
                     end
                 end
 
