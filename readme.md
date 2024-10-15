@@ -84,9 +84,11 @@ i.e. `dkbros INVINCIBLE`
 
 The Donkey Kong rom hacking resource - https://github.com/furrykef/dkdasm
 
-Mr2Nut123 for his ideas, assistance with testing and marquee design - https://www.twitch.tv/mr2nut123
+Mr2Nut123 (Luke) for his ideas, assistance with testing and marquee design - https://www.twitch.tv/mr2nut123
 
 Paul Goes for his thorough testing - https://donkeykonghacks.net/
+
+CharlieFar (Dave) for play testing on his stream - https://www.twitch.tv/charliefar
 
 The MAMEdev team - https://docs.mamedev.org/
 

@@ -13,8 +13,10 @@ xcopy wolf256 dist\wolf256 /S /i /Y
 rmdir dist\wolf256\cfg /s /Q
 rmdir dist\wolf256\inp /s /Q
 rmdir dist\wolf256\ui /s /Q
+rmdir dist\wolf256\ini /s /Q
 rmdir dist\wolf256\snap /s /Q
 del dist\wolf256\session\*.* /Q
+del dist\wolf256\ui.ini /Q
 copy readme.md dist\readme.md /Y
 
 "C:\Program Files\Python37\Scripts\pyinstaller" dkbros.py --onefile --clean --noconsole --icon dkafe.ico

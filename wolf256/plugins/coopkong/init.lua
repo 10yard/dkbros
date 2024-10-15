@@ -39,11 +39,11 @@ function coopkong.startplugin()
 	local spawn_table = {{0xee,0xf0}, {0xdb,0xa0}, {0xe6,0xc8}, {0xd6,0x78}, {0x1b,0xc8}, {0x23,0xa0}, {0x2b,0x78}, {0x12,0xf0}}
 	local palette = {0xfffefcff, 0xffffffff, 0xfff4ba15}
 	local graphics = {
-		"           1    222  222  222  222  222  222  2  2  2222        ",
-		"           11   2     2   2    2    2 2   2   22 2  2           ",
-		"  1111111111111 222   2   222  222  22    2   2 22  2 22        ",
-		"           11     2   2   2    2    2 2   2   2  2  2  2        ",
-		"           1    222   2   222  222  2 2  222  2  2  2222        "}
+		"           1    ",
+		"           11   ",
+		"  1111111111111 ",
+		"           11   ",
+		"           1    "}
 
 	function initialize()
 		--[[
@@ -96,7 +96,7 @@ function coopkong.startplugin()
 			write_data(0x08de, {0x00, 0x00, 0x00})							    -- Mod: 1 credit is enough for 1 or 2 player start
 			write_data(0x0902, {0xca, 0x06, 0x09})							    -- Mod: 2P start button does same as 1P start button
 
-            -- Mod: Steering can switch between P1 and P2 based on content of 0x6103 (X pos) and 0x6104 (Input State)
+            -- Mod: Steering can switch between P1 and P2 based on content of 0x6103 (X pos), 0x6104 (Input State)
             write_data(0x2198, {0x03, 0x61})
             write_data(0x2195, {0x04, 0x61})
 
@@ -148,8 +148,8 @@ function coopkong.startplugin()
 			status = mem:read_u8(0x6005)		-- game status (1 attract, 2 coins in, 3 playing)
 			mode = mem:read_u8(0x600a)			-- mode
 			frame = scr:frame_number()			-- frame number (~60 fps)
-			--mem:write_u8(0x6227, 2)			-- force a specific stage
-			--mem:write_u8(0x6229, 5)           -- force a specific level
+			--mem:write_u8(0x6227, 3)			-- force a specific stage
+			--mem:write_u8(0x6229, 3)           -- force a specific level
 			stage = mem:read_u8(0x6227)			-- active stage (1=barrels, 2=pies, 3=springs, 4=rivets)
 
 			if session == 2 then
@@ -158,8 +158,8 @@ function coopkong.startplugin()
 				 #     # ######  ####   ####  #  ####  #    #    #     # 
 				 #       #      #      #      # #    # ##   #          # 
 				  #####  #####   ####   ####  # #    # # #  #     #####  
-					   # #           #      # # #    # #  # #    #       
-				 #     # #      #    # #    # # #    # #   ##    #       
+					   # #           #      # # #    # #  # #    #
+				 #     # #      #    # #    # # #    # #   ##    #
 				  #####  ######  ####   ####  #  ####  #    #    #######
 				]]
 				if not show2 then blank_screen() end
@@ -339,14 +339,16 @@ function coopkong.startplugin()
 					steer_sprite = 0x64
 				end
 
-                if stage == 1 and s1["mode"] >= 12 then
-                    -- Store lowest players Y position at 0x6102 for barrel logic mod
-                    if s2["y"] > s1["y"] then mem:write_u8(0x6102, s2["y"]) else mem:write_u8(0x6102, s1["y"]) end
+                -- Store lowest players Y position at 0x6102 for fire tracking and barrel logic mods
+				if s1["mode"] == 12 then
+					if s2["y"] > s1["y"] then mem:write_u8(0x6102, s2["y"]) else mem:write_u8(0x6102, s1["y"]) end
+				end
 
+				if stage == 1 and s1["mode"] >= 12 then
 					-- Determine the active barrel steerer for barrel steering mod
                     if olds1 and olds1["hammer_active"] == 0 and s1["hammer_active"] == 1 then active_steerer = 1 end
                     if olds2 and olds2["hammer_active"] == 0 and s2["hammer_active"] == 1 then active_steerer = 2 end
-                    -- Store the X position of the active barrel steerer and input state
+                    -- Store the X, Y position of the active barrel steerer and input state
                     if active_steerer == 2 then
 						mem:write_u8(0x6103, s2["x"])
                         mem:write_u8(0x6104, s2["input_state"])
@@ -368,11 +370,11 @@ function coopkong.startplugin()
 				if stage == 4 and s1["mode"] == 12 then
 					local _spawn_addr = mem:read_u16(0x6107)
 					if _spawn_addr >= 0x6400 and _spawn_addr <= 0x649f then
-						-- logic to work out the 3 safest spawn positions (from 8) and pick one randomly
+						-- logic to determine 3 safe spawn positions (from 8) and select one randomly.  Adjust for more Y distance.
 						local _dt = {}  -- distance table
 						for i=1, #spawn_table do
 							local _x = math.min(math.abs(s1["x"] - spawn_table[i][1]), math.abs(s2["x"] - spawn_table[i][1]))
-							local _y = math.min(math.abs(s1["y"] - spawn_table[i][2]), math.abs(s2["y"] - spawn_table[i][2]))
+							local _y = math.min(math.abs(s1["y"] - spawn_table[i][2]), math.abs(s2["y"] - spawn_table[i][2])) * 0.9
 							table.insert(_dt, {i, _x + _y})
 						end
 						table.sort(_dt, function(lhs, rhs) return lhs[2] < rhs[2] end)
