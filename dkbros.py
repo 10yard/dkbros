@@ -7,7 +7,7 @@ O     O  O  O      O     O  OOOOO   O    O       O  OO
 OOOOOO   O    O    OOOOOO   O    O   OOOO    OOOO   OO
 
 2 Player co-op Donkey Kong
-Prototype I by 10yard
+Prototype K by 10yard
 
 A wrapper for MAME to simplify launch of the DKBros plugin and to synchronise realtime data across 2 sessions.
 Session 2 is hidden from view.
@@ -17,8 +17,15 @@ import sys
 import threading
 import subprocess
 import ctypes
+import shutil
 
-MAME_COMMAND = 'dkmame dkong -plugin coopkong -keyboardprovider rawinput -background_input -volume 0 -skip_gameinfo -throttle -nosleep -autoframeskip'
+# Are there optional parameters e.g. "WINDOW", "INVINCIBLE", "SHOW2" or "INVINCIBLE WINDOW"
+optional_parameters = ""
+if len(sys.argv) > 1:
+    optional_parameters = sys.argv[1].upper().strip()
+
+DOUBLE = "2" if "DOUBLE" in optional_parameters or os.path.exists("DOUBLE.txt") else ""
+MAME_COMMAND = f'dkmame{DOUBLE} dkong -plugin coopkong -keyboardprovider rawinput -background_input -volume 0 -skip_gameinfo -throttle -nosleep -autoframeskip'
 DEFAULT_VIDEO = '-video bgfx -bgfx_screen_chains unfiltered'
 UPDATE_LIST = [(":IN0", ":INX"), ("P1_", "PX_"), (":IN1", ":IN0"), ("P2_", "P1_"), (":INX", ":IN1"), ("PX_", "P2_")]
 
@@ -26,15 +33,15 @@ def background_mame(session_specific_args):
     subprocess.Popen(f"{MAME_COMMAND} {session_specific_args}", creationflags=subprocess.CREATE_NO_WINDOW)
 
 def cleanup_mame():
-    subprocess.run(f"taskkill /f /IM dkmame.exe", creationflags=subprocess.CREATE_NO_WINDOW)
+    subprocess.run(f"taskkill /f /IM dkmame{DOUBLE}.exe", creationflags=subprocess.CREATE_NO_WINDOW)
 
 if __name__ == "__main__":
     cleanup_mame()
 
-    # Are there optional parameters e.g. "WINDOW", "INVINCIBLE", "SHOW2" or "INVINCIBLE WINDOW"
-    optional_parameters = ""
-    if len(sys.argv) > 1:
-        optional_parameters = sys.argv[1].upper().strip()
+    #Additional instance of DKBros for total of 4 players (2x2)
+    if DOUBLE:
+        if not os.path.exists("wolf256/dkmame2.exe"):
+            shutil.copyfile("wolf256/dkmame.exe", "wolf256/dkmame2.exe")
 
     # Windowed mode possible by providing "WINDOW" parameter or by creating a file named WINDOW or WINDOW.txt
     window = ""

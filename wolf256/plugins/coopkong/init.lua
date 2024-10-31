@@ -5,8 +5,8 @@ O     O  O  O      O     O  O    O  O    O  O
 O     O  OOO       OOOOOO   O    O  O    O   OOOO
 O     O  O  O      O     O  OOOOO   O    O       O  OO
 OOOOOO   O    O    OOOOOO   O    O   OOOO    OOOO   OO
-2 Player co-op Donkey Kong
-PROTOTYPE I by 10yard
+2 player co-op Donkey Kong
+PROTOTYPE K by 10yard
 
 The arcade version of Donkey Kong is adapted for 2 player co-operative gameplay.
 For x64 Windows only. 
@@ -18,7 +18,7 @@ Session 1 (foreground) and session 2 (background) are synchronised - data is mer
 ]]
 local exports = {}
 exports.name = "coopkong"
-exports.version = "0.9"
+exports.version = "0.11"
 exports.description = "DK Bros: Multiplayer Co-Op Donkey Kong"
 exports.license = "GNU GPLv3"
 exports.author = { name = "Jon Wilson (10yard)" }
@@ -100,6 +100,10 @@ function coopkong.startplugin()
             write_data(0x2198, {0x03, 0x61})
             write_data(0x2195, {0x04, 0x61})
 
+			-- Mod: Crazy barrels target the active steerer
+			write_data(0x230a, {0x03, 0x61})
+			write_data(0x231b, {0x03, 0x61})
+
 			-- Mod: set default fireball spawning positions on rivets
 			write_data(0x3ac4, {0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff})
 			write_data(0x3ad4, {0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff})
@@ -148,8 +152,8 @@ function coopkong.startplugin()
 			status = mem:read_u8(0x6005)		-- game status (1 attract, 2 coins in, 3 playing)
 			mode = mem:read_u8(0x600a)			-- mode
 			frame = scr:frame_number()			-- frame number (~60 fps)
-			--mem:write_u8(0x6227, 3)			-- force a specific stage
-			--mem:write_u8(0x6229, 3)           -- force a specific level
+			--mem:write_u8(0x6227, 4)			-- force a specific stage
+			--mem:write_u8(0x6229, 5)           -- force a specific level
 			stage = mem:read_u8(0x6227)			-- active stage (1=barrels, 2=pies, 3=springs, 4=rivets)
 
 			if session == 2 then
@@ -214,14 +218,14 @@ function coopkong.startplugin()
 				if s2["mode"] ~= 12 then snd.attenuation = -32 else snd.attenuation = att end
 
 				-- Remove bonus items collected by P1
-				if s1["mode"] == 12 and stage > 1 then
+				if s1["mode"] == 12 and s2["mode"] == 12 and stage > 1 then
 					for i=0x6a0c, 0x6a14, 4 do
 						if s1["item-"..tostring(i)] == 0 then mem:write_u8(i, 0) end
 					end
 				end
 
 				-- Check and remove P1 rivets
-				if s1["mode"] == 12 and stage == 4 then sync_rivets(s1) end
+				if s1["mode"] == 12 and s2["mode"] == 12 and stage == 4 then sync_rivets(s1) end
 
 				-- Sync: P2 also finishes
 				if s2["mode"] == 12 and s1["mode"] == 0x16 then
@@ -344,7 +348,9 @@ function coopkong.startplugin()
 					if s2["y"] > s1["y"] then mem:write_u8(0x6102, s2["y"]) else mem:write_u8(0x6102, s1["y"]) end
 				end
 
-				if stage == 1 and s1["mode"] >= 12 then
+				if stage == 1 and s1["mode"] < 12 then active_steerer = 1 end  -- set active barrel steerer back to P1
+
+				if stage == 1 and s1["mode"] >= 11 then
 					-- Determine the active barrel steerer for barrel steering mod
                     if olds1 and olds1["hammer_active"] == 0 and s1["hammer_active"] == 1 then active_steerer = 1 end
                     if olds2 and olds2["hammer_active"] == 0 and s2["hammer_active"] == 1 then active_steerer = 2 end
@@ -363,8 +369,6 @@ function coopkong.startplugin()
 						write_data(0x6a74, {68, steer_sprite, 11, 4})-- display P1 steering indicator
                     end
                 end
-
-				if stage == 1 and s1["mode"] < 12 then active_steerer = 1 end  -- set active steerer back to 1
 
 				-- detect and reposition spawning fireballs on rivet stage
 				if stage == 4 and s1["mode"] == 12 then
@@ -463,7 +467,7 @@ function coopkong.startplugin()
 				end
 
 				-- Check and remove P2 rivets
-				if s2["mode"] == 12 and stage == 4 then sync_rivets(s2) end
+				if s1["mode"] == 12 and s2["mode"] == 12 and stage == 4 then sync_rivets(s2) end
 
 				-- Sync: P1 also finishes
 				if s1["mode"] == 12 and s2["mode"] == 0x16 then
@@ -556,7 +560,7 @@ function coopkong.startplugin()
 			write_message(0x77b1 + i, " + + + +  + + + + + +   +   ")
 			write_message(0x77b2 + i, " ++  + +  +++ + + +++ +++ + ")
 			write_message(0x77b3 + i, "                            ")
-			if frame % 192 < 96 then write_message(0x77bf, " PROTOTYPE I") else write_message(0x77bf, " BY 10YARD  ") end
+			if frame % 192 < 96 then write_message(0x77bf, " PROTOTYPE K") else write_message(0x77bf, " BY 10YARD  ") end
 			if invincible == 1 then write_message(0x7683, "INVINCIBLE") end  -- Invincible mode
 		end
 	end
