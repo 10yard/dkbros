@@ -9,7 +9,7 @@ Development by Jon Wilson (10yard)
 
 ## How to Play
 
-- Extract the contents of the dkbros_prototype zip file into a folder.  It includes everything you need apart from the `dkong.zip` rom file.
+- Extract the contents of the dkbros zip file into a folder.  It includes everything you need apart from the `dkong.zip` rom file.
 
 - Place your `dkong.zip` into the wolf256\roms folder.
 
