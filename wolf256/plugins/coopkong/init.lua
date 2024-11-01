@@ -6,7 +6,7 @@ O     O  OOO       OOOOOO   O    O  O    O   OOOO
 O     O  O  O      O     O  OOOOO   O    O       O  OO
 OOOOOO   O    O    OOOOOO   O    O   OOOO    OOOO   OO
 2 player co-op Donkey Kong
-PROTOTYPE K by 10yard
+Version 1.0 by 10yard
 
 The arcade version of Donkey Kong is adapted for 2 player co-operative gameplay.
 For x64 Windows only. 
@@ -18,7 +18,7 @@ Session 1 (foreground) and session 2 (background) are synchronised - data is mer
 ]]
 local exports = {}
 exports.name = "coopkong"
-exports.version = "0.11"
+exports.version = "1.0"
 exports.description = "DK Bros: Multiplayer Co-Op Donkey Kong"
 exports.license = "GNU GPLv3"
 exports.author = { name = "Jon Wilson (10yard)" }
@@ -560,7 +560,7 @@ function coopkong.startplugin()
 			write_message(0x77b1 + i, " + + + +  + + + + + +   +   ")
 			write_message(0x77b2 + i, " ++  + +  +++ + + +++ +++ + ")
 			write_message(0x77b3 + i, "                            ")
-			if frame % 192 < 96 then write_message(0x77bf, " PROTOTYPE K") else write_message(0x77bf, " BY 10YARD  ") end
+			if frame % 192 < 96 then write_message(0x77bf, " VERSION 1@0") else write_message(0x77bf, " BY 10YARD  ") end
 			if invincible == 1 then write_message(0x7683, "INVINCIBLE") end  -- Invincible mode
 		end
 	end
